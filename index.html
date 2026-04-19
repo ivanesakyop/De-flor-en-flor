@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --rosa: #d81b60; --verde: #4caf50; --azul: #2196f3; --rojo: #f44336; --naranja: #ff9800; }
+        :root { --rosa: #d81b60; --verde: #4caf50; --azul: #2196f3; --rojo: #f44336; --naranja: #ff9800; --gris: #757575; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #fdf2f8; padding: 15px; margin: 0; color: #333; padding-bottom: 50px; }
         .tab-container { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; z-index: 100; background: #fdf2f8; padding: 10px 0; }
         .tab { flex: 1; padding: 12px 5px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.85em; }
@@ -17,13 +17,16 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .resumen-global { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
         .caja-item { background: white; padding: 10px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .caja-item b { font-size: 1em; display: block; margin-top: 4px; }
+        .caja-item b { font-size: 0.9em; display: block; margin-top: 4px; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; border-top: 4px solid var(--rosa); }
+        label { font-size: 0.8em; font-weight: bold; color: var(--rosa); margin-top: 5px; display: block; }
         input, select { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .btn-principal { background: var(--rosa); color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
-        .item-lista { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
-        .chart-container { width: 100%; height: 250px; margin-top: 10px; }
-        .alerta-gasto { background: #fff3e0; border-left: 4px solid var(--naranja); padding: 10px; font-size: 0.9em; margin-top: 10px; border-radius: 4px; }
+        .item-lista { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid #ccc; display: block; position: relative; }
+        .info-row { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+        .status-select { width: auto; padding: 5px; margin: 0; font-size: 12px; height: auto; border-radius: 4px; }
+        .chart-container { width: 100%; height: 220px; margin-top: 10px; margin-bottom: 20px; }
+        .badge { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -51,6 +54,7 @@
                 <input type="number" id="p-costo" placeholder="Total $">
                 <input type="number" id="p-pagado" placeholder="Abonó $">
             </div>
+            <label for="p-fecha">Fecha de entrega:</label>
             <input type="date" id="p-fecha">
             <button class="btn-principal" onclick="agregarPedido()">Agendar Pedido</button>
         </div>
@@ -69,6 +73,7 @@
                 <option value="Otros">📦 Otros</option>
             </select>
             <input type="number" id="g-monto" placeholder="Monto $">
+            <label for="g-fecha">Fecha del gasto:</label>
             <input type="date" id="g-fecha">
             <button class="btn-principal" style="background:var(--rojo)" onclick="agregarGasto()">Guardar Gasto</button>
         </div>
@@ -77,23 +82,20 @@
 
     <div id="sec-reportes" class="seccion-contenido">
         <div class="card">
-            <h4 style="margin:0">Gastos del Mes</h4>
+            <h4 style="margin:0">Balance General</h4>
+            <div class="chart-container"><canvas id="graficaBarras"></canvas></div>
+            <h4 style="margin:0">Distribución de Gastos</h4>
             <div class="chart-container"><canvas id="graficaDona"></canvas></div>
-            <div id="analisis-texto" class="alerta-gasto"></div>
         </div>
 
         <div class="card" style="border-top-color: var(--verde)">
             <h4>Seguridad y Correo</h4>
-            <p style="font-size: 0.8em; color: #666">Recibe tus datos en tu Gmail personal.</p>
             <button id="btn-correo" class="btn-principal" style="background: var(--verde)" onclick="enviarAlCorreo()">📧 Enviar Respaldo al Correo</button>
-            <hr>
-            <p style="font-size: 0.8em; color: #666">Cargar respaldo manual (.json):</p>
-            <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)" style="font-size: 0.7em;">
+            <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)" style="font-size: 0.7em; margin-top:10px;">
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN EMAILJS DEFINITIVA - IVAN
         const PUBLIC_KEY = "ggvE7QUjO8FoXcNCR"; 
         const TEMPLATE_ID = "template_1ibwgrt";
         const SERVICE_ID = "service_abqmyha";
@@ -103,7 +105,7 @@
 
         let pedidos = JSON.parse(localStorage.getItem('flor_v12_pedidos')) || [];
         let gastos = JSON.parse(localStorage.getItem('flor_v12_gastos')) || [];
-        let chartDona = null;
+        let chartBarras = null, chartDona = null;
 
         function mostrarPestaña(nombreSeccion, boton) {
             document.querySelectorAll('.seccion-contenido').forEach(sec => sec.classList.remove('active'));
@@ -114,7 +116,15 @@
         }
 
         function agregarPedido() {
-            const p = { id: Date.now(), cliente: document.getElementById('p-cliente').value, arreglo: document.getElementById('p-arreglo').value, costo: parseFloat(document.getElementById('p-costo').value) || 0, pagado: parseFloat(document.getElementById('p-pagado').value) || 0, fecha: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0] };
+            const p = { 
+                id: Date.now(), 
+                cliente: document.getElementById('p-cliente').value, 
+                arreglo: document.getElementById('p-arreglo').value, 
+                costo: parseFloat(document.getElementById('p-costo').value) || 0, 
+                pagado: parseFloat(document.getElementById('p-pagado').value) || 0, 
+                fecha: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0],
+                estado: 'En espera' 
+            };
             if(!p.cliente) return alert("Nombre de cliente vacío");
             pedidos.push(p); actualizar();
         }
@@ -123,6 +133,11 @@
             const g = { id: Date.now(), concepto: document.getElementById('g-concepto').value, categoria: document.getElementById('g-categoria').value, monto: parseFloat(document.getElementById('g-monto').value) || 0, fecha: document.getElementById('g-fecha').value || new Date().toISOString().split('T')[0] };
             if(!g.concepto) return alert("Concepto vacío");
             gastos.push(g); actualizar();
+        }
+
+        function cambiarEstado(id, nuevoEstado) {
+            pedidos = pedidos.map(p => p.id === id ? {...p, estado: nuevoEstado} : p);
+            actualizar();
         }
 
         function borrarItem(id, tipo) {
@@ -143,66 +158,73 @@
             const lp = document.getElementById('lista-pedidos'), lg = document.getElementById('lista-gastos');
             lp.innerHTML = ''; lg.innerHTML = '';
             let v = 0, g = 0;
+            
+            pedidos.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+
             pedidos.forEach(p => { 
-                v += p.pagado; 
-                lp.innerHTML += `<div class="item-lista" style="border-left-color:var(--azul)">
-                    <span><b>${p.cliente}</b><br><small>${p.arreglo}</small></span>
-                    <span>$${p.pagado} <button onclick="borrarItem(${p.id}, 'pedido')" style="border:none; background:none; color:red; margin-left:10px;">✕</button></span>
+                v += p.pagado;
+                const col = p.estado === 'Entregado' ? 'var(--verde)' : (p.estado === 'En proceso' ? 'var(--naranja)' : (p.estado === 'Surtido' ? 'var(--azul)' : 'var(--gris)'));
+                
+                lp.innerHTML += `
+                <div class="item-lista" style="border-left-color:${col}">
+                    <div class="info-row">
+                        <span><b>${p.cliente}</b> <small>(${p.fecha})</small><br><small>${p.arreglo}</small></span>
+                        <button onclick="borrarItem(${p.id}, 'pedido')" style="border:none; background:none; color:red;">✕</button>
+                    </div>
+                    <div class="info-row" style="margin-bottom:0">
+                        <select class="status-select" onchange="cambiarEstado(${p.id}, this.value)">
+                            <option value="En espera" ${p.estado === 'En espera' ? 'selected' : ''}>⏳ En espera</option>
+                            <option value="En proceso" ${p.estado === 'En proceso' ? 'selected' : ''}>🌿 En proceso</option>
+                            <option value="Surtido" ${p.estado === 'Surtido' ? 'selected' : ''}>💐 Surtido</option>
+                            <option value="Entregado" ${p.estado === 'Entregado' ? 'selected' : ''}>✅ Entregado</option>
+                        </select>
+                        <b style="color:var(--verde)">$${p.pagado}</b>
+                    </div>
                 </div>`; 
             });
+            
             gastos.forEach(ga => { 
                 g += ga.monto; 
-                lg.innerHTML += `<div class="item-lista" style="border-left-color:var(--rojo)">
+                lg.innerHTML += `<div class="item-lista" style="border-left-color:var(--rojo); padding: 12px; display: flex; justify-content: space-between; align-items: center;">
                     <span><b>${ga.concepto}</b><br><small>${ga.categoria}</small></span>
                     <span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="border:none; background:none; color:red; margin-left:10px;">✕</button></span>
                 </div>`; 
             });
+            
             document.getElementById('total-ventas').innerText = '$' + v.toFixed(2);
             document.getElementById('total-gastos').innerText = '$' + g.toFixed(2);
             document.getElementById('total-utilidad').innerText = '$' + (v - g).toFixed(2);
+        }
+
+        function generarReportes() {
+            const ctxB = document.getElementById('graficaBarras').getContext('2d');
+            const ctxD = document.getElementById('graficaDona').getContext('2d');
+            let tV = pedidos.reduce((a, b) => a + b.pagado, 0);
+            let tG = gastos.reduce((a, b) => a + b.monto, 0);
+            if(chartBarras) chartBarras.destroy();
+            chartBarras = new Chart(ctxB, { type: 'bar', data: { labels: ['Ventas', 'Gastos'], datasets: [{ label: '$ Pesos', data: [tV, tG], backgroundColor: ['#4caf50', '#f44336'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+            let cats = ["Flores e Insumos", "Renta y Servicios", "Sueldos", "Publicidad", "Otros"], mC = [0,0,0,0,0];
+            gastos.forEach(g => { let idx = cats.indexOf(g.categoria); if(idx!==-1) mC[idx] += g.monto; });
+            if(chartDona) chartDona.destroy();
+            chartDona = new Chart(ctxD, { type: 'doughnut', data: { labels: cats, datasets: [{ data: mC, backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
 
         function enviarAlCorreo() {
             const btn = document.getElementById('btn-correo');
             btn.innerText = "Enviando..."; btn.disabled = true;
             const dataStr = JSON.stringify({ pedidos, gastos, fecha: new Date().toLocaleString() });
-
             emailjs.send(SERVICE_ID, TEMPLATE_ID, { datos_json: dataStr, to_email: MI_CORREO })
-            .then(() => { 
-                alert("¡Respaldo enviado a " + MI_CORREO + "!"); 
-                btn.innerText = "📧 Enviar Respaldo al Correo"; 
-                btn.disabled = false; 
-            })
-            .catch((err) => { 
-                alert("Error al enviar. Revisa tu conexión."); 
-                console.error(err); 
-                btn.innerText = "Intentar de nuevo";
-                btn.disabled = false; 
-            });
+            .then(() => { alert("¡Enviado!"); btn.innerText = "📧 Enviar Respaldo al Correo"; btn.disabled = false; })
+            .catch(() => { alert("Error"); btn.disabled = false; });
         }
 
         function importarJSON(e) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                try {
-                    const d = JSON.parse(event.target.result);
-                    if(confirm("¿Cargar estos datos? Se borrará lo actual.")){ 
-                        pedidos = d.pedidos || []; 
-                        gastos = d.gastos || []; 
-                        actualizar(); 
-                        location.reload(); 
-                    }
-                } catch(e) { alert("Archivo inválido"); }
+                const d = JSON.parse(event.target.result);
+                pedidos = d.pedidos || []; gastos = d.gastos || []; actualizar(); location.reload();
             };
             reader.readAsText(e.target.files[0]);
-        }
-
-        function generarReportes() {
-            const ctxDona = document.getElementById('graficaDona').getContext('2d');
-            let cats = ["Flores e Insumos", "Renta y Servicios", "Sueldos", "Publicidad", "Otros"], mC = [0,0,0,0,0];
-            gastos.forEach(g => { let idx = cats.indexOf(g.categoria); if(idx!==-1) mC[idx] += g.monto; });
-            if(chartDona) chartDona.destroy();
-            chartDona = new Chart(ctxDona, { type: 'doughnut', data: { labels: cats, datasets: [{ data: mC, backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
         renderizar();
     </script>
