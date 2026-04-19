@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De flor en flor - Final</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --rosa: #d81b60; --verde: #4caf50; --azul: #2196f3; --rojo: #f44336; --naranja: #ff9800; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #fdf2f8; padding: 15px; margin: 0; color: #333; padding-bottom: 50px; }
+        
+        /* Navegación Reforzada */
+        .tab-container { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; z-index: 100; background: #fdf2f8; padding: 10px 0; }
+        .tab { flex: 1; padding: 12px 5px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.85em; transition: 0.3s; }
+        .tab.active { background: var(--rosa); color: white; box-shadow: 0 4px 10px rgba(216, 27, 96, 0.3); }
+        
+        /* Secciones */
+        .seccion-contenido { display: none; animation: fadeIn 0.3s; }
+        .seccion-contenido.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .resumen-global { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+        .caja-item { background: white; padding: 10px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .caja-item b { font-size: 1em; display: block; margin-top: 4px; }
+        .caja-item span { font-size: 0.7em; color: #666; text-transform: uppercase; }
+
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; border-top: 4px solid var(--rosa); }
+        input, select { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn-principal { background: var(--rosa); color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; }
+        
+        .item-lista { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid #ccc; position: relative; }
+        .chart-container { width: 100%; height: 250px; margin-top: 10px; }
+        .alerta-gasto { background: #fff3e0; border-left: 4px solid var(--naranja); padding: 10px; font-size: 0.9em; margin-top: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align:center; color:var(--rosa); margin: 10px 0;">🌸 De flor en flor</h2>
+
+    <div class="resumen-global">
+        <div class="caja-item"><span>Ventas</span><b id="total-ventas" style="color:var(--verde)">$0</b></div>
+        <div class="caja-item"><span>Gastos</span><b id="total-gastos" style="color:var(--rojo)">$0</b></div>
+        <div class="caja-item"><span>Utilidad</span><b id="total-utilidad" style="color:var(--rosa)">$0</b></div>
+    </div>
+
+    <div class="tab-container">
+        <button class="tab active" onclick="mostrarPestaña('pedidos', this)">📅 Pedidos</button>
+        <button class="tab" onclick="mostrarPestaña('gastos', this)">💸 Gastos</button>
+        <button class="tab" onclick="mostrarPestaña('reportes', this)">📊 Análisis</button>
+    </div>
+
+    <div id="sec-pedidos" class="seccion-contenido active">
+        <div class="card">
+            <h4>Nuevo Pedido</h4>
+            <input type="text" id="p-cliente" placeholder="Nombre del cliente">
+            <input type="text" id="p-arreglo" placeholder="Descripción del arreglo">
+            <div style="display:flex; gap:5px;">
+                <input type="number" id="p-costo" placeholder="Total $">
+                <input type="number" id="p-pagado" placeholder="Abonó $">
+            </div>
+            <input type="date" id="p-fecha">
+            <button class="btn-principal" onclick="agregarPedido()">Agendar Pedido</button>
+        </div>
+        <div id="lista-pedidos"></div>
+    </div>
+
+    <div id="sec-gastos" class="seccion-contenido">
+        <div class="card">
+            <h4>Registrar Gasto</h4>
+            <input type="text" id="g-concepto" placeholder="Ej: Pago de luz">
+            <select id="g-categoria">
+                <option value="Flores e Insumos">🌸 Flores e Insumos</option>
+                <option value="Renta y Servicios">🏠 Renta y Servicios</option>
+                <option value="Sueldos">👥 Sueldos</option>
+                <option value="Publicidad">📱 Publicidad</option>
+                <option value="Otros">📦 Otros</option>
+            </select>
+            <input type="number" id="g-monto" placeholder="Monto $">
+            <input type="date" id="g-fecha">
+            <button class="btn-principal" style="background:var(--rojo)" onclick="agregarGasto()">Guardar Gasto</button>
+        </div>
+        <div id="lista-gastos"></div>
+    </div>
+
+    <div id="sec-reportes" class="seccion-contenido">
+        <div class="card">
+            <h4 style="margin:0">Distribución de Gastos (Mes Actual)</h4>
+            <div class="chart-container"><canvas id="graficaDona"></canvas></div>
+            <div id="analisis-texto" class="alerta-gasto"></div>
+        </div>
+        <div class="card">
+            <h4 style="margin:0">Ventas vs Gastos (Anual)</h4>
+            <div class="chart-container"><canvas id="graficaBarras"></canvas></div>
+        </div>
+    </div>
+
+    <script>
+        let pedidos = JSON.parse(localStorage.getItem('flor_v8_pedidos')) || [];
+        let gastos = JSON.parse(localStorage.getItem('flor_v8_gastos')) || [];
+        let chartBarras = null, chartDona = null;
+
+        // FUNCIÓN DE NAVEGACIÓN CORREGIDA
+        function mostrarPestaña(nombreSeccion, boton) {
+            // 1. Ocultar todas las secciones
+            document.querySelectorAll('.seccion-contenido').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            // 2. Quitar clase active a todos los botones
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            // 3. Mostrar la sección seleccionada y activar botón
+            document.getElementById('sec-' + nombreSeccion).classList.add('active');
+            boton.classList.add('active');
+
+            // 4. Si es reportes, disparar las gráficas
+            if(nombreSeccion === 'reportes') {
+                setTimeout(generarReportes, 100); // Un pequeño retraso para asegurar que el canvas sea visible
+            }
+        }
+
+        function agregarPedido() {
+            const pedido = {
+                id: Date.now(),
+                cliente: document.getElementById('p-cliente').value,
+                arreglo: document.getElementById('p-arreglo').value,
+                costo: parseFloat(document.getElementById('p-costo').value) || 0,
+                pagado: parseFloat(document.getElementById('p-pagado').value) || 0,
+                fecha: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0]
+            };
+            if(!pedido.cliente) return alert("Escribe el nombre del cliente");
+            pedidos.push(pedido);
+            actualizar();
+        }
+
+        function agregarGasto() {
+            const gasto = {
+                id: Date.now(),
+                concepto: document.getElementById('g-concepto').value,
+                categoria: document.getElementById('g-categoria').value,
+                monto: parseFloat(document.getElementById('g-monto').value) || 0,
+                fecha: document.getElementById('g-fecha').value || new Date().toISOString().split('T')[0]
+            };
+            if(!gasto.concepto) return alert("Escribe el concepto del gasto");
+            gastos.push(gasto);
+            actualizar();
+        }
+
+        function actualizar() {
+            localStorage.setItem('flor_v8_pedidos', JSON.stringify(pedidos));
+            localStorage.setItem('flor_v8_gastos', JSON.stringify(gastos));
+            renderizar();
+            document.querySelectorAll('input').forEach(i => i.value = '');
+        }
+
+        function renderizar() {
+            const lp = document.getElementById('lista-pedidos');
+            const lg = document.getElementById('lista-gastos');
+            lp.innerHTML = ''; lg.innerHTML = '';
+            let v = 0, g = 0;
+
+            pedidos.forEach(p => { 
+                v += p.pagado; 
+                lp.innerHTML += `<div class="item-lista" style="border-left-color:var(--azul)"><b>${p.cliente}</b> - $${p.pagado} <br><small>${p.fecha}</small></div>`; 
+            });
+            gastos.forEach(ga => { 
+                g += ga.monto; 
+                lg.innerHTML += `<div class="item-lista" style="border-left-color:var(--rojo)"><b>${ga.concepto}</b> ($${ga.monto}) <br><small>${ga.categoria}</small></div>`; 
+            });
+
+            document.getElementById('total-ventas').innerText = '$' + v.toFixed(2);
+            document.getElementById('total-gastos').innerText = '$' + g.toFixed(2);
+            document.getElementById('total-utilidad').innerText = '$' + (v - g).toFixed(2);
+        }
+
+        function generarReportes() {
+            const ctxBarras = document.getElementById('graficaBarras').getContext('2d');
+            const ctxDona = document.getElementById('graficaDona').getContext('2d');
+            const mesActual = new Date().getMonth();
+            
+            // Dona
+            let cats = ["Flores e Insumos", "Renta y Servicios", "Sueldos", "Publicidad", "Otros"];
+            let montosCat = [0, 0, 0, 0, 0];
+            gastos.filter(g => new Date(g.fecha).getMonth() === mesActual).forEach(g => {
+                let idx = cats.indexOf(g.categoria);
+                if(idx !== -1) montosCat[idx] += g.monto;
+            });
+
+            if(chartDona) chartDona.destroy();
+            chartDona = new Chart(ctxDona, {
+                type: 'doughnut',
+                data: { labels: cats, datasets: [{ data: montosCat, backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Análisis texto
+            let maxGasto = Math.max(...montosCat);
+            let catMayor = cats[montosCat.indexOf(maxGasto)];
+            document.getElementById('analisis-texto').innerHTML = maxGasto > 0 ? 
+                `💡 Este mes, tu mayor gasto es <b>${catMayor}</b>: $${maxGasto.toFixed(2)}.` : "Sin gastos este mes.";
+
+            // Barras
+            let vM = new Array(12).fill(0), gM = new Array(12).fill(0);
+            pedidos.forEach(p => vM[new Date(p.fecha).getMonth()] += p.pagado);
+            gastos.forEach(g => gM[new Date(g.fecha).getMonth()] += g.monto);
+
+            if(chartBarras) chartBarras.destroy();
+            chartBarras = new Chart(ctxBarras, {
+                type: 'bar',
+                data: {
+                    labels: ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],
+                    datasets: [{ label: 'Ventas', data: vM, backgroundColor: '#4caf50' }, { label: 'Gastos', data: gM, backgroundColor: '#f44336' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        renderizar();
+    </script>
+</body>
+</html>
