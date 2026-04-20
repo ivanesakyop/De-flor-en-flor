@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>De flor en flor - App Oficial</title>
+    <title>De flor en flor - Versión 16</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
@@ -20,13 +20,14 @@
         .caja-item b { font-size: 0.9em; display: block; margin-top: 4px; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; border-top: 4px solid var(--rosa); }
         label { font-size: 0.8em; font-weight: bold; color: var(--rosa); margin-top: 5px; display: block; }
-        input, select { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-family: inherit; }
+        textarea { resize: none; height: 80px; }
         .btn-principal { background: var(--rosa); color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
         .item-lista { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid #ccc; display: block; position: relative; }
         .info-row { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
         .status-select { width: auto; padding: 5px; margin: 0; font-size: 12px; height: auto; border-radius: 4px; }
+        .nota-box { background: #f9f9f9; padding: 8px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; border: 1px dashed #ccc; font-style: italic; }
         .chart-container { width: 100%; height: 220px; margin-top: 10px; margin-bottom: 20px; }
-        .badge { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -54,8 +55,18 @@
                 <input type="number" id="p-costo" placeholder="Total $">
                 <input type="number" id="p-pagado" placeholder="Abonó $">
             </div>
-            <label for="p-fecha">Fecha de entrega:</label>
-            <input type="date" id="p-fecha">
+            <div style="display:flex; gap:5px;">
+                <div style="flex:1">
+                    <label>Fecha de entrega:</label>
+                    <input type="date" id="p-fecha">
+                </div>
+                <div style="flex:1">
+                    <label>Hora:</label>
+                    <input type="time" id="p-hora">
+                </div>
+            </div>
+            <label>Notas / Dedicatoria:</label>
+            <textarea id="p-notas" placeholder="Ej: Dedicatoria de la tarjeta o instrucciones de entrega..."></textarea>
             <button class="btn-principal" onclick="agregarPedido()">Agendar Pedido</button>
         </div>
         <div id="lista-pedidos"></div>
@@ -73,7 +84,7 @@
                 <option value="Otros">📦 Otros</option>
             </select>
             <input type="number" id="g-monto" placeholder="Monto $">
-            <label for="g-fecha">Fecha del gasto:</label>
+            <label>Fecha del gasto:</label>
             <input type="date" id="g-fecha">
             <button class="btn-principal" style="background:var(--rojo)" onclick="agregarGasto()">Guardar Gasto</button>
         </div>
@@ -103,8 +114,9 @@
 
         (function(){ emailjs.init(PUBLIC_KEY); })();
 
-        let pedidos = JSON.parse(localStorage.getItem('flor_v12_pedidos')) || [];
-        let gastos = JSON.parse(localStorage.getItem('flor_v12_gastos')) || [];
+        // Cambiamos el nombre de la base de datos interna para evitar conflictos
+        let pedidos = JSON.parse(localStorage.getItem('flor_v16_pedidos')) || [];
+        let gastos = JSON.parse(localStorage.getItem('flor_v16_gastos')) || [];
         let chartBarras = null, chartDona = null;
 
         function mostrarPestaña(nombreSeccion, boton) {
@@ -123,6 +135,8 @@
                 costo: parseFloat(document.getElementById('p-costo').value) || 0, 
                 pagado: parseFloat(document.getElementById('p-pagado').value) || 0, 
                 fecha: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0],
+                hora: document.getElementById('p-hora').value || '--:--',
+                notas: document.getElementById('p-notas').value || '',
                 estado: 'En espera' 
             };
             if(!p.cliente) return alert("Nombre de cliente vacío");
@@ -148,10 +162,10 @@
         }
 
         function actualizar() {
-            localStorage.setItem('flor_v12_pedidos', JSON.stringify(pedidos));
-            localStorage.setItem('flor_v12_gastos', JSON.stringify(gastos));
+            localStorage.setItem('flor_v16_pedidos', JSON.stringify(pedidos));
+            localStorage.setItem('flor_v16_gastos', JSON.stringify(gastos));
             renderizar();
-            document.querySelectorAll('input').forEach(i => i.type !== 'file' ? i.value = '' : null);
+            document.querySelectorAll('input, textarea').forEach(i => i.type !== 'file' ? i.value = '' : null);
         }
 
         function renderizar() {
@@ -159,7 +173,8 @@
             lp.innerHTML = ''; lg.innerHTML = '';
             let v = 0, g = 0;
             
-            pedidos.sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+            // Ordenar por fecha y luego por hora
+            pedidos.sort((a,b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
 
             pedidos.forEach(p => { 
                 v += p.pagado;
@@ -168,10 +183,11 @@
                 lp.innerHTML += `
                 <div class="item-lista" style="border-left-color:${col}">
                     <div class="info-row">
-                        <span><b>${p.cliente}</b> <small>(${p.fecha})</small><br><small>${p.arreglo}</small></span>
+                        <span><b>${p.cliente}</b><br><small>📅 ${p.fecha} | ⏰ ${p.hora}</small><br><small>💐 ${p.arreglo}</small></span>
                         <button onclick="borrarItem(${p.id}, 'pedido')" style="border:none; background:none; color:red;">✕</button>
                     </div>
-                    <div class="info-row" style="margin-bottom:0">
+                    ${p.notas ? `<div class="nota-box">📝 ${p.notas}</div>` : ''}
+                    <div class="info-row" style="margin-top:10px; margin-bottom:0">
                         <select class="status-select" onchange="cambiarEstado(${p.id}, this.value)">
                             <option value="En espera" ${p.estado === 'En espera' ? 'selected' : ''}>⏳ En espera</option>
                             <option value="En proceso" ${p.estado === 'En proceso' ? 'selected' : ''}>🌿 En proceso</option>
