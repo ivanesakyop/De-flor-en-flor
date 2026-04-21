@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>De flor en flor - Versión 16</title>
+    <title>De flor en flor - Versión 20</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --rosa: #d81b60; --verde: #4caf50; --azul: #2196f3; --rojo: #f44336; --naranja: #ff9800; --gris: #757575; }
+        :root { --rosa: #d81b60; --verde: #4caf50; --azul: #2196f3; --rojo: #f44336; --naranja: #ff9800; --gris: #757575; --wpp: #25d366; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #fdf2f8; padding: 15px; margin: 0; color: #333; padding-bottom: 50px; }
         .tab-container { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; z-index: 100; background: #fdf2f8; padding: 10px 0; }
-        .tab { flex: 1; padding: 12px 5px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.85em; }
+        .tab { flex: 1; padding: 12px 2px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.75em; text-transform: uppercase; }
         .tab.active { background: var(--rosa); color: white; box-shadow: 0 4px 10px rgba(216, 27, 96, 0.3); }
         .seccion-contenido { display: none; animation: fadeIn 0.3s; }
         .seccion-contenido.active { display: block; }
@@ -21,13 +21,16 @@
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; border-top: 4px solid var(--rosa); }
         label { font-size: 0.8em; font-weight: bold; color: var(--rosa); margin-top: 5px; display: block; }
         input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-family: inherit; }
-        textarea { resize: none; height: 80px; }
+        textarea { resize: none; height: 60px; }
         .btn-principal { background: var(--rosa); color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
         .item-lista { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid #ccc; display: block; position: relative; }
         .info-row { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
         .status-select { width: auto; padding: 5px; margin: 0; font-size: 12px; height: auto; border-radius: 4px; }
         .nota-box { background: #f9f9f9; padding: 8px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; border: 1px dashed #ccc; font-style: italic; }
-        .chart-container { width: 100%; height: 220px; margin-top: 10px; margin-bottom: 20px; }
+        .btn-accion { border:none; background:none; cursor:pointer; font-size: 14px; padding: 5px; }
+        .btn-wpp { background: var(--wpp); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.75em; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: bold; }
+        .chart-container { width: 100%; height: 200px; margin-top: 10px; margin-bottom: 20px; }
+        .pago-alerta { color: var(--rojo); font-weight: bold; font-size: 0.8em; }
     </style>
 </head>
 <body>
@@ -41,32 +44,27 @@
     </div>
 
     <div class="tab-container">
-        <button class="tab active" onclick="mostrarPestaña('pedidos', this)">📅 Pedidos</button>
-        <button class="tab" onclick="mostrarPestaña('gastos', this)">💸 Gastos</button>
-        <button class="tab" onclick="mostrarPestaña('reportes', this)">📊 Análisis</button>
+        <button class="tab active" onclick="mostrarPestaña('pedidos', this)">Pedidos</button>
+        <button class="tab" onclick="mostrarPestaña('gastos', this)">Gastos</button>
+        <button class="tab" onclick="mostrarPestaña('clientes', this)">Clientes</button>
+        <button class="tab" onclick="mostrarPestaña('reportes', this)">Análisis</button>
     </div>
 
     <div id="sec-pedidos" class="seccion-contenido active">
         <div class="card">
             <h4>Nuevo Pedido</h4>
             <input type="text" id="p-cliente" placeholder="Nombre del cliente">
+            <input type="tel" id="p-tel" placeholder="WhatsApp (10 dígitos)">
             <input type="text" id="p-arreglo" placeholder="Descripción del arreglo">
             <div style="display:flex; gap:5px;">
                 <input type="number" id="p-costo" placeholder="Total $">
                 <input type="number" id="p-pagado" placeholder="Abonó $">
             </div>
             <div style="display:flex; gap:5px;">
-                <div style="flex:1">
-                    <label>Fecha de entrega:</label>
-                    <input type="date" id="p-fecha">
-                </div>
-                <div style="flex:1">
-                    <label>Hora:</label>
-                    <input type="time" id="p-hora">
-                </div>
+                <div style="flex:1"><label>Fecha:</label><input type="date" id="p-fecha"></div>
+                <div style="flex:1"><label>Hora:</label><input type="time" id="p-hora"></div>
             </div>
-            <label>Notas / Dedicatoria:</label>
-            <textarea id="p-notas" placeholder="Ej: Dedicatoria de la tarjeta o instrucciones de entrega..."></textarea>
+            <textarea id="p-notas" placeholder="Dedicatoria o notas..."></textarea>
             <button class="btn-principal" onclick="agregarPedido()">Agendar Pedido</button>
         </div>
         <div id="lista-pedidos"></div>
@@ -84,25 +82,31 @@
                 <option value="Otros">📦 Otros</option>
             </select>
             <input type="number" id="g-monto" placeholder="Monto $">
-            <label>Fecha del gasto:</label>
-            <input type="date" id="g-fecha">
+            <label>Fecha:</label><input type="date" id="g-fecha">
             <button class="btn-principal" style="background:var(--rojo)" onclick="agregarGasto()">Guardar Gasto</button>
         </div>
         <div id="lista-gastos"></div>
     </div>
 
+    <div id="sec-clientes" class="seccion-contenido">
+        <div class="card" style="border-top-color: var(--azul)">
+            <h4>Directorio de Clientes</h4>
+            <p style="font-size: 0.8em; color: gray;">Edita o contacta a tus clientes guardados.</p>
+        </div>
+        <div id="lista-clientes"></div>
+    </div>
+
     <div id="sec-reportes" class="seccion-contenido">
         <div class="card">
-            <h4 style="margin:0">Balance General</h4>
+            <h4>Balance General</h4>
             <div class="chart-container"><canvas id="graficaBarras"></canvas></div>
-            <h4 style="margin:0">Distribución de Gastos</h4>
+            <h4>Distribución de Gastos</h4>
             <div class="chart-container"><canvas id="graficaDona"></canvas></div>
         </div>
-
         <div class="card" style="border-top-color: var(--verde)">
-            <h4>Seguridad y Correo</h4>
-            <button id="btn-correo" class="btn-principal" style="background: var(--verde)" onclick="enviarAlCorreo()">📧 Enviar Respaldo al Correo</button>
-            <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)" style="font-size: 0.7em; margin-top:10px;">
+            <h4>Seguridad</h4>
+            <button id="btn-correo" class="btn-principal" style="background: var(--verde)" onclick="enviarAlCorreo()">📧 Enviar Respaldo</button>
+            <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)" style="font-size: 0.7em;">
         </div>
     </div>
 
@@ -114,9 +118,9 @@
 
         (function(){ emailjs.init(PUBLIC_KEY); })();
 
-        // Cambiamos el nombre de la base de datos interna para evitar conflictos
-        let pedidos = JSON.parse(localStorage.getItem('flor_v16_pedidos')) || [];
-        let gastos = JSON.parse(localStorage.getItem('flor_v16_gastos')) || [];
+        let pedidos = JSON.parse(localStorage.getItem('flor_v20_pedidos')) || [];
+        let gastos = JSON.parse(localStorage.getItem('flor_v20_gastos')) || [];
+        let clientes = JSON.parse(localStorage.getItem('flor_v20_clientes')) || [];
         let chartBarras = null, chartDona = null;
 
         function mostrarPestaña(nombreSeccion, boton) {
@@ -128,9 +132,10 @@
         }
 
         function agregarPedido() {
+            const clienteNombre = document.getElementById('p-cliente').value;
+            const clienteTel = document.getElementById('p-tel').value;
             const p = { 
-                id: Date.now(), 
-                cliente: document.getElementById('p-cliente').value, 
+                id: Date.now(), cliente: clienteNombre, tel: clienteTel,
                 arreglo: document.getElementById('p-arreglo').value, 
                 costo: parseFloat(document.getElementById('p-costo').value) || 0, 
                 pagado: parseFloat(document.getElementById('p-pagado').value) || 0, 
@@ -139,8 +144,21 @@
                 notas: document.getElementById('p-notas').value || '',
                 estado: 'En espera' 
             };
-            if(!p.cliente) return alert("Nombre de cliente vacío");
-            pedidos.push(p); actualizar();
+            if(!p.cliente) return alert("Nombre vacío");
+            pedidos.push(p);
+            if(clienteTel && !clientes.find(c => c.tel === clienteTel)) clientes.push({ nombre: clienteNombre, tel: clienteTel });
+            actualizar();
+        }
+
+        function editarCliente(telViejo) {
+            const c = clientes.find(cli => cli.tel === telViejo);
+            const nN = prompt("Nombre:", c.nombre);
+            const nT = prompt("Teléfono:", c.tel);
+            if (nN && nT) {
+                clientes = clientes.map(cli => cli.tel === telViejo ? { nombre: nN, tel: nT } : cli);
+                pedidos = pedidos.map(p => p.tel === telViejo ? { ...p, cliente: nN, tel: nT } : p);
+                actualizar();
+            }
         }
 
         function agregarGasto() {
@@ -155,56 +173,61 @@
         }
 
         function borrarItem(id, tipo) {
-            if(!confirm("¿Borrar este registro?")) return;
+            if(!confirm("¿Borrar?")) return;
             if(tipo === 'pedido') pedidos = pedidos.filter(p => p.id !== id);
-            else gastos = gastos.filter(g => g.id !== id);
+            else if(tipo === 'gasto') gastos = gastos.filter(g => g.id !== id);
+            else if(tipo === 'cliente') clientes = clientes.filter(c => c.tel !== id);
             actualizar();
         }
 
         function actualizar() {
-            localStorage.setItem('flor_v16_pedidos', JSON.stringify(pedidos));
-            localStorage.setItem('flor_v16_gastos', JSON.stringify(gastos));
+            localStorage.setItem('flor_v20_pedidos', JSON.stringify(pedidos));
+            localStorage.setItem('flor_v20_gastos', JSON.stringify(gastos));
+            localStorage.setItem('flor_v20_clientes', JSON.stringify(clientes));
             renderizar();
             document.querySelectorAll('input, textarea').forEach(i => i.type !== 'file' ? i.value = '' : null);
         }
 
         function renderizar() {
-            const lp = document.getElementById('lista-pedidos'), lg = document.getElementById('lista-gastos');
-            lp.innerHTML = ''; lg.innerHTML = '';
+            const lp = document.getElementById('lista-pedidos'), lg = document.getElementById('lista-gastos'), lc = document.getElementById('lista-clientes');
+            lp.innerHTML = ''; lg.innerHTML = ''; lc.innerHTML = '';
             let v = 0, g = 0;
             
-            // Ordenar por fecha y luego por hora
             pedidos.sort((a,b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
-
             pedidos.forEach(p => { 
-                v += p.pagado;
+                // LÓGICA DE DINERO: Si está entregado, suma el total. Si no, suma solo el abono.
+                const montoEfectivo = p.estado === 'Entregado' ? p.costo : p.pagado;
+                v += montoEfectivo;
+
+                const faltante = p.costo - p.pagado;
                 const col = p.estado === 'Entregado' ? 'var(--verde)' : (p.estado === 'En proceso' ? 'var(--naranja)' : (p.estado === 'Surtido' ? 'var(--azul)' : 'var(--gris)'));
                 
                 lp.innerHTML += `
                 <div class="item-lista" style="border-left-color:${col}">
                     <div class="info-row">
-                        <span><b>${p.cliente}</b><br><small>📅 ${p.fecha} | ⏰ ${p.hora}</small><br><small>💐 ${p.arreglo}</small></span>
-                        <button onclick="borrarItem(${p.id}, 'pedido')" style="border:none; background:none; color:red;">✕</button>
+                        <span><b>${p.cliente}</b><br><small>📅 ${p.fecha} | ⏰ ${p.hora}</small></span>
+                        <button onclick="borrarItem(${p.id}, 'pedido')" style="color:red; border:none; background:none;">✕</button>
                     </div>
                     ${p.notas ? `<div class="nota-box">📝 ${p.notas}</div>` : ''}
                     <div class="info-row" style="margin-top:10px; margin-bottom:0">
-                        <select class="status-select" onchange="cambiarEstado(${p.id}, this.value)">
-                            <option value="En espera" ${p.estado === 'En espera' ? 'selected' : ''}>⏳ En espera</option>
-                            <option value="En proceso" ${p.estado === 'En proceso' ? 'selected' : ''}>🌿 En proceso</option>
-                            <option value="Surtido" ${p.estado === 'Surtido' ? 'selected' : ''}>💐 Surtido</option>
-                            <option value="Entregado" ${p.estado === 'Entregado' ? 'selected' : ''}>✅ Entregado</option>
-                        </select>
-                        <b style="color:var(--verde)">$${p.pagado}</b>
+                        <div>
+                            <select class="status-select" onchange="cambiarEstado(${p.id}, this.value)">
+                                <option value="En espera" ${p.estado === 'En espera' ? 'selected' : ''}>⏳ Espera</option>
+                                <option value="En proceso" ${p.estado === 'En proceso' ? 'selected' : ''}>🌿 Proceso</option>
+                                <option value="Surtido" ${p.estado === 'Surtido' ? 'selected' : ''}>💐 Surtido</option>
+                                <option value="Entregado" ${p.estado === 'Entregado' ? 'selected' : ''}>✅ Entregado</option>
+                            </select>
+                            ${(p.estado !== 'Entregado' && faltante > 0) ? `<br><span class="pago-alerta">Faltan $${faltante}</span>` : ''}
+                        </div>
+                        <b style="color:var(--verde)">$${montoEfectivo}</b>
                     </div>
                 </div>`; 
             });
             
-            gastos.forEach(ga => { 
-                g += ga.monto; 
-                lg.innerHTML += `<div class="item-lista" style="border-left-color:var(--rojo); padding: 12px; display: flex; justify-content: space-between; align-items: center;">
-                    <span><b>${ga.concepto}</b><br><small>${ga.categoria}</small></span>
-                    <span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="border:none; background:none; color:red; margin-left:10px;">✕</button></span>
-                </div>`; 
+            gastos.forEach(ga => { g += ga.monto; lg.innerHTML += `<div class="item-lista" style="border-left-color:var(--rojo); display:flex; justify-content:space-between; align-items:center;"><span><b>${ga.concepto}</b></span><span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="color:red; border:none; background:none;">✕</button></span></div>`; });
+
+            clientes.sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(c => {
+                lc.innerHTML += `<div class="item-lista" style="border-left-color:var(--azul); display:flex; justify-content:space-between; align-items:center;"><span><b>${c.nombre}</b><br><small>${c.tel}</small></span><div><a href="https://wa.me/52${c.tel}" target="_blank" class="btn-wpp">💬</a><button onclick="editarCliente('${c.tel}')" class="btn-accion">✏️</button></div></div>`;
             });
             
             document.getElementById('total-ventas').innerText = '$' + v.toFixed(2);
@@ -213,12 +236,10 @@
         }
 
         function generarReportes() {
-            const ctxB = document.getElementById('graficaBarras').getContext('2d');
-            const ctxD = document.getElementById('graficaDona').getContext('2d');
-            let tV = pedidos.reduce((a, b) => a + b.pagado, 0);
-            let tG = gastos.reduce((a, b) => a + b.monto, 0);
+            const ctxB = document.getElementById('graficaBarras').getContext('2d'), ctxD = document.getElementById('graficaDona').getContext('2d');
+            let tV = parseFloat(document.getElementById('total-ventas').innerText.replace('$','')), tG = gastos.reduce((a, b) => a + b.monto, 0);
             if(chartBarras) chartBarras.destroy();
-            chartBarras = new Chart(ctxB, { type: 'bar', data: { labels: ['Ventas', 'Gastos'], datasets: [{ label: '$ Pesos', data: [tV, tG], backgroundColor: ['#4caf50', '#f44336'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+            chartBarras = new Chart(ctxB, { type: 'bar', data: { labels: ['Ventas', 'Gastos'], datasets: [{ label: '$', data: [tV, tG], backgroundColor: ['#4caf50', '#f44336'] }] }, options: { responsive: true, maintainAspectRatio: false } });
             let cats = ["Flores e Insumos", "Renta y Servicios", "Sueldos", "Publicidad", "Otros"], mC = [0,0,0,0,0];
             gastos.forEach(g => { let idx = cats.indexOf(g.categoria); if(idx!==-1) mC[idx] += g.monto; });
             if(chartDona) chartDona.destroy();
@@ -226,20 +247,14 @@
         }
 
         function enviarAlCorreo() {
-            const btn = document.getElementById('btn-correo');
-            btn.innerText = "Enviando..."; btn.disabled = true;
-            const dataStr = JSON.stringify({ pedidos, gastos, fecha: new Date().toLocaleString() });
-            emailjs.send(SERVICE_ID, TEMPLATE_ID, { datos_json: dataStr, to_email: MI_CORREO })
-            .then(() => { alert("¡Enviado!"); btn.innerText = "📧 Enviar Respaldo al Correo"; btn.disabled = false; })
-            .catch(() => { alert("Error"); btn.disabled = false; });
+            const btn = document.getElementById('btn-correo'); btn.innerText = "Enviando..."; btn.disabled = true;
+            const dataStr = JSON.stringify({ pedidos, gastos, clientes, fecha: new Date().toLocaleString() });
+            emailjs.send(SERVICE_ID, TEMPLATE_ID, { datos_json: dataStr, to_email: MI_CORREO }).then(() => { alert("¡Respaldo enviado!"); btn.innerText = "📧 Enviar Respaldo"; btn.disabled = false; });
         }
 
         function importarJSON(e) {
             const reader = new FileReader();
-            reader.onload = (event) => {
-                const d = JSON.parse(event.target.result);
-                pedidos = d.pedidos || []; gastos = d.gastos || []; actualizar(); location.reload();
-            };
+            reader.onload = (event) => { pedidos = JSON.parse(event.target.result).pedidos || []; actualizar(); location.reload(); };
             reader.readAsText(e.target.files[0]);
         }
         renderizar();
