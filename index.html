@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>De flor en flor - Versión 20</title>
+    <title>De flor en flor - Versión 21</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
@@ -29,8 +29,8 @@
         .nota-box { background: #f9f9f9; padding: 8px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; border: 1px dashed #ccc; font-style: italic; }
         .btn-accion { border:none; background:none; cursor:pointer; font-size: 14px; padding: 5px; }
         .btn-wpp { background: var(--wpp); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.75em; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: bold; }
-        .chart-container { width: 100%; height: 200px; margin-top: 10px; margin-bottom: 20px; }
         .pago-alerta { color: var(--rojo); font-weight: bold; font-size: 0.8em; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -56,10 +56,24 @@
             <input type="text" id="p-cliente" placeholder="Nombre del cliente">
             <input type="tel" id="p-tel" placeholder="WhatsApp (10 dígitos)">
             <input type="text" id="p-arreglo" placeholder="Descripción del arreglo">
+            
+            <label>Tipo de entrega:</label>
+            <select id="p-entrega" onchange="toggleEnvio()">
+                <option value="Local">🏠 Recoge en Local</option>
+                <option value="Envio">🚚 Envío a domicilio</option>
+            </select>
+
+            <div id="campos-envio" class="hidden">
+                <input type="text" id="p-direccion" placeholder="Dirección completa">
+                <input type="number" id="p-costo-envio" placeholder="Costo de envío $" oninput="calcularTotalEnvio()">
+            </div>
+
             <div style="display:flex; gap:5px;">
-                <input type="number" id="p-costo" placeholder="Total $">
+                <input type="number" id="p-costo" placeholder="Costo Arreglo $">
                 <input type="number" id="p-pagado" placeholder="Abonó $">
             </div>
+            <div style="font-size: 0.8em; color: var(--rosa); margin-bottom: 10px;">Total Sugerido (con envío): <b id="total-sugerido">$0</b></div>
+
             <div style="display:flex; gap:5px;">
                 <div style="flex:1"><label>Fecha:</label><input type="date" id="p-fecha"></div>
                 <div style="flex:1"><label>Hora:</label><input type="time" id="p-hora"></div>
@@ -91,22 +105,15 @@
     <div id="sec-clientes" class="seccion-contenido">
         <div class="card" style="border-top-color: var(--azul)">
             <h4>Directorio de Clientes</h4>
-            <p style="font-size: 0.8em; color: gray;">Edita o contacta a tus clientes guardados.</p>
         </div>
         <div id="lista-clientes"></div>
     </div>
 
     <div id="sec-reportes" class="seccion-contenido">
         <div class="card">
-            <h4>Balance General</h4>
-            <div class="chart-container"><canvas id="graficaBarras"></canvas></div>
-            <h4>Distribución de Gastos</h4>
-            <div class="chart-container"><canvas id="graficaDona"></canvas></div>
-        </div>
-        <div class="card" style="border-top-color: var(--verde)">
-            <h4>Seguridad</h4>
-            <button id="btn-correo" class="btn-principal" style="background: var(--verde)" onclick="enviarAlCorreo()">📧 Enviar Respaldo</button>
-            <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)" style="font-size: 0.7em;">
+            <h4>Análisis</h4>
+            <div style="height:200px"><canvas id="graficaBarras"></canvas></div>
+            <button id="btn-correo" class="btn-principal" style="background: var(--verde); margin-top:20px" onclick="enviarAlCorreo()">📧 Enviar Respaldo</button>
         </div>
     </div>
 
@@ -118,72 +125,74 @@
 
         (function(){ emailjs.init(PUBLIC_KEY); })();
 
-        let pedidos = JSON.parse(localStorage.getItem('flor_v20_pedidos')) || [];
-        let gastos = JSON.parse(localStorage.getItem('flor_v20_gastos')) || [];
-        let clientes = JSON.parse(localStorage.getItem('flor_v20_clientes')) || [];
-        let chartBarras = null, chartDona = null;
+        let pedidos = JSON.parse(localStorage.getItem('flor_v21_pedidos')) || [];
+        let gastos = JSON.parse(localStorage.getItem('flor_v21_gastos')) || [];
+        let clientes = JSON.parse(localStorage.getItem('flor_v21_clientes')) || [];
 
-        function mostrarPestaña(nombreSeccion, boton) {
-            document.querySelectorAll('.seccion-contenido').forEach(sec => sec.classList.remove('active'));
+        function toggleEnvio() {
+            const div = document.getElementById('campos-envio');
+            div.classList.toggle('hidden', document.getElementById('p-entrega').value !== 'Envio');
+            calcularTotalEnvio();
+        }
+
+        function calcularTotalEnvio() {
+            const costoArr = parseFloat(document.getElementById('p-costo').value) || 0;
+            const costoEnv = parseFloat(document.getElementById('p-costo-envio').value) || 0;
+            document.getElementById('total-sugerido').innerText = '$' + (costoArr + costoEnv);
+        }
+
+        function mostrarPestaña(n, b) {
+            document.querySelectorAll('.seccion-contenido').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('sec-' + nombreSeccion).classList.add('active');
-            boton.classList.add('active');
-            if(nombreSeccion === 'reportes') setTimeout(generarReportes, 100);
+            document.getElementById('sec-' + n).classList.add('active');
+            b.classList.add('active');
+            if(n === 'reportes') setTimeout(generarReportes, 100);
         }
 
         function agregarPedido() {
-            const clienteNombre = document.getElementById('p-cliente').value;
-            const clienteTel = document.getElementById('p-tel').value;
+            const cN = document.getElementById('p-cliente').value;
+            const cT = document.getElementById('p-tel').value;
+            const tipo = document.getElementById('p-entrega').value;
+            const envio = parseFloat(document.getElementById('p-costo-envio').value) || 0;
+            const costoBase = parseFloat(document.getElementById('p-costo').value) || 0;
+
             const p = { 
-                id: Date.now(), cliente: clienteNombre, tel: clienteTel,
+                id: Date.now(), cliente: cN, tel: cT,
                 arreglo: document.getElementById('p-arreglo').value, 
-                costo: parseFloat(document.getElementById('p-costo').value) || 0, 
+                tipoEntrega: tipo,
+                direccion: document.getElementById('p-direccion').value,
+                costo: costoBase + envio, 
                 pagado: parseFloat(document.getElementById('p-pagado').value) || 0, 
                 fecha: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0],
                 hora: document.getElementById('p-hora').value || '--:--',
                 notas: document.getElementById('p-notas').value || '',
                 estado: 'En espera' 
             };
-            if(!p.cliente) return alert("Nombre vacío");
+
+            if(!cN) return alert("Nombre vacío");
             pedidos.push(p);
-            if(clienteTel && !clientes.find(c => c.tel === clienteTel)) clientes.push({ nombre: clienteNombre, tel: clienteTel });
+            if(cT && !clientes.find(c => c.tel === cT)) clientes.push({ nombre: cN, tel: cT });
+            actualizar();
+            document.getElementById('campos-envio').classList.add('hidden');
+        }
+
+        function cambiarEstado(id, nE) {
+            pedidos = pedidos.map(p => p.id === id ? {...p, estado: nE} : p);
             actualizar();
         }
 
-        function editarCliente(telViejo) {
-            const c = clientes.find(cli => cli.tel === telViejo);
-            const nN = prompt("Nombre:", c.nombre);
-            const nT = prompt("Teléfono:", c.tel);
-            if (nN && nT) {
-                clientes = clientes.map(cli => cli.tel === telViejo ? { nombre: nN, tel: nT } : cli);
-                pedidos = pedidos.map(p => p.tel === telViejo ? { ...p, cliente: nN, tel: nT } : p);
-                actualizar();
-            }
-        }
-
-        function agregarGasto() {
-            const g = { id: Date.now(), concepto: document.getElementById('g-concepto').value, categoria: document.getElementById('g-categoria').value, monto: parseFloat(document.getElementById('g-monto').value) || 0, fecha: document.getElementById('g-fecha').value || new Date().toISOString().split('T')[0] };
-            if(!g.concepto) return alert("Concepto vacío");
-            gastos.push(g); actualizar();
-        }
-
-        function cambiarEstado(id, nuevoEstado) {
-            pedidos = pedidos.map(p => p.id === id ? {...p, estado: nuevoEstado} : p);
-            actualizar();
-        }
-
-        function borrarItem(id, tipo) {
+        function borrarItem(id, t) {
             if(!confirm("¿Borrar?")) return;
-            if(tipo === 'pedido') pedidos = pedidos.filter(p => p.id !== id);
-            else if(tipo === 'gasto') gastos = gastos.filter(g => g.id !== id);
-            else if(tipo === 'cliente') clientes = clientes.filter(c => c.tel !== id);
+            if(t === 'pedido') pedidos = pedidos.filter(p => p.id !== id);
+            else if(t === 'gasto') gastos = gastos.filter(g => g.id !== id);
+            else if(t === 'cliente') clientes = clientes.filter(c => c.tel !== id);
             actualizar();
         }
 
         function actualizar() {
-            localStorage.setItem('flor_v20_pedidos', JSON.stringify(pedidos));
-            localStorage.setItem('flor_v20_gastos', JSON.stringify(gastos));
-            localStorage.setItem('flor_v20_clientes', JSON.stringify(clientes));
+            localStorage.setItem('flor_v21_pedidos', JSON.stringify(pedidos));
+            localStorage.setItem('flor_v21_gastos', JSON.stringify(gastos));
+            localStorage.setItem('flor_v21_clientes', JSON.stringify(clientes));
             renderizar();
             document.querySelectorAll('input, textarea').forEach(i => i.type !== 'file' ? i.value = '' : null);
         }
@@ -193,21 +202,19 @@
             lp.innerHTML = ''; lg.innerHTML = ''; lc.innerHTML = '';
             let v = 0, g = 0;
             
-            pedidos.sort((a,b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
-            pedidos.forEach(p => { 
-                // LÓGICA DE DINERO: Si está entregado, suma el total. Si no, suma solo el abono.
-                const montoEfectivo = p.estado === 'Entregado' ? p.costo : p.pagado;
-                v += montoEfectivo;
-
+            pedidos.sort((a,b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)).forEach(p => { 
+                const monto = p.estado === 'Entregado' ? p.costo : p.pagado;
+                v += monto;
                 const faltante = p.costo - p.pagado;
                 const col = p.estado === 'Entregado' ? 'var(--verde)' : (p.estado === 'En proceso' ? 'var(--naranja)' : (p.estado === 'Surtido' ? 'var(--azul)' : 'var(--gris)'));
                 
                 lp.innerHTML += `
                 <div class="item-lista" style="border-left-color:${col}">
                     <div class="info-row">
-                        <span><b>${p.cliente}</b><br><small>📅 ${p.fecha} | ⏰ ${p.hora}</small></span>
+                        <span><b>${p.cliente}</b> ${p.tipoEntrega === 'Envio' ? '🚚' : '🏠'}<br><small>📅 ${p.fecha} | ⏰ ${p.hora}</small></span>
                         <button onclick="borrarItem(${p.id}, 'pedido')" style="color:red; border:none; background:none;">✕</button>
                     </div>
+                    ${p.tipoEntrega === 'Envio' ? `<div style="font-size:0.75em; color:var(--azul); margin-bottom:5px;">📍 ${p.direccion}</div>` : ''}
                     ${p.notas ? `<div class="nota-box">📝 ${p.notas}</div>` : ''}
                     <div class="info-row" style="margin-top:10px; margin-bottom:0">
                         <div>
@@ -219,16 +226,13 @@
                             </select>
                             ${(p.estado !== 'Entregado' && faltante > 0) ? `<br><span class="pago-alerta">Faltan $${faltante}</span>` : ''}
                         </div>
-                        <b style="color:var(--verde)">$${montoEfectivo}</b>
+                        <b style="color:var(--verde)">$${monto}</b>
                     </div>
                 </div>`; 
             });
             
             gastos.forEach(ga => { g += ga.monto; lg.innerHTML += `<div class="item-lista" style="border-left-color:var(--rojo); display:flex; justify-content:space-between; align-items:center;"><span><b>${ga.concepto}</b></span><span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="color:red; border:none; background:none;">✕</button></span></div>`; });
-
-            clientes.sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(c => {
-                lc.innerHTML += `<div class="item-lista" style="border-left-color:var(--azul); display:flex; justify-content:space-between; align-items:center;"><span><b>${c.nombre}</b><br><small>${c.tel}</small></span><div><a href="https://wa.me/52${c.tel}" target="_blank" class="btn-wpp">💬</a><button onclick="editarCliente('${c.tel}')" class="btn-accion">✏️</button></div></div>`;
-            });
+            clientes.forEach(c => { lc.innerHTML += `<div class="item-lista" style="border-left-color:var(--azul); display:flex; justify-content:space-between; align-items:center;"><span><b>${c.nombre}</b><br><small>${c.tel}</small></span><div><a href="https://wa.me/52${c.tel}" target="_blank" class="btn-wpp">💬</a></div></div>`; });
             
             document.getElementById('total-ventas').innerText = '$' + v.toFixed(2);
             document.getElementById('total-gastos').innerText = '$' + g.toFixed(2);
@@ -236,26 +240,15 @@
         }
 
         function generarReportes() {
-            const ctxB = document.getElementById('graficaBarras').getContext('2d'), ctxD = document.getElementById('graficaDona').getContext('2d');
+            const ctxB = document.getElementById('graficaBarras').getContext('2d');
             let tV = parseFloat(document.getElementById('total-ventas').innerText.replace('$','')), tG = gastos.reduce((a, b) => a + b.monto, 0);
-            if(chartBarras) chartBarras.destroy();
-            chartBarras = new Chart(ctxB, { type: 'bar', data: { labels: ['Ventas', 'Gastos'], datasets: [{ label: '$', data: [tV, tG], backgroundColor: ['#4caf50', '#f44336'] }] }, options: { responsive: true, maintainAspectRatio: false } });
-            let cats = ["Flores e Insumos", "Renta y Servicios", "Sueldos", "Publicidad", "Otros"], mC = [0,0,0,0,0];
-            gastos.forEach(g => { let idx = cats.indexOf(g.categoria); if(idx!==-1) mC[idx] += g.monto; });
-            if(chartDona) chartDona.destroy();
-            chartDona = new Chart(ctxD, { type: 'doughnut', data: { labels: cats, datasets: [{ data: mC, backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+            new Chart(ctxB, { type: 'bar', data: { labels: ['Ventas', 'Gastos'], datasets: [{ label: '$', data: [tV, tG], backgroundColor: ['#4caf50', '#f44336'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
 
         function enviarAlCorreo() {
             const btn = document.getElementById('btn-correo'); btn.innerText = "Enviando..."; btn.disabled = true;
             const dataStr = JSON.stringify({ pedidos, gastos, clientes, fecha: new Date().toLocaleString() });
             emailjs.send(SERVICE_ID, TEMPLATE_ID, { datos_json: dataStr, to_email: MI_CORREO }).then(() => { alert("¡Respaldo enviado!"); btn.innerText = "📧 Enviar Respaldo"; btn.disabled = false; });
-        }
-
-        function importarJSON(e) {
-            const reader = new FileReader();
-            reader.onload = (event) => { pedidos = JSON.parse(event.target.result).pedidos || []; actualizar(); location.reload(); };
-            reader.readAsText(e.target.files[0]);
         }
         renderizar();
     </script>
