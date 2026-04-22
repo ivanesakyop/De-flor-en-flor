@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>De flor en flor - Versión 22</title>
+    <title>De flor en flor - Versión 24</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
@@ -26,6 +26,7 @@
         .info-row { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
         .status-select { width: auto; padding: 5px; margin: 0; font-size: 12px; height: auto; border-radius: 4px; }
         .btn-wpp { background: var(--wpp); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.75em; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: bold; }
+        .btn-maps { background: var(--azul); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.75em; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: bold; margin-left: 5px; }
         .pago-alerta { color: var(--rojo); font-weight: bold; font-size: 0.8em; }
         .hidden { display: none; }
         .nota-box { background: #f9f9f9; padding: 8px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; border: 1px dashed #ccc; font-style: italic; }
@@ -71,7 +72,7 @@
                 <input type="number" id="p-costo" placeholder="Costo Arreglo $" oninput="calcularTotalSugerido()">
                 <input type="number" id="p-pagado" placeholder="Abonó $">
             </div>
-            <div style="font-size: 0.8em; color: var(--rosa); margin-bottom: 10px;">Total Sugerido (Arreglo + Envío): <b id="total-sugerido">$0</b></div>
+            <div style="font-size: 0.8em; color: var(--rosa); margin-bottom: 10px;">Total Sugerido: <b id="total-sugerido">$0</b></div>
 
             <div style="display:flex; gap:5px;">
                 <div style="flex:1"><label>Fecha:</label><input type="date" id="p-fecha"></div>
@@ -92,6 +93,7 @@
                 <option value="Renta y Servicios">🏠 Renta y Servicios</option>
                 <option value="Sueldos">👥 Sueldos</option>
                 <option value="Publicidad">📱 Publicidad</option>
+                <option value="Ahorro">💰 Ahorro</option>
                 <option value="Otros">📦 Otros</option>
             </select>
             <input type="number" id="g-monto" placeholder="Monto $">
@@ -114,12 +116,9 @@
             <div style="height:200px"><canvas id="graficaBarras"></canvas></div>
         </div>
         <div class="card" style="border-top-color: var(--verde)">
-            <h4>Seguridad y Datos</h4>
-            <button id="btn-correo" class="btn-principal" style="background: var(--verde)" onclick="enviarAlCorreo()">📧 Enviar Respaldo al Correo</button>
-            
-            <label>📥 Importar Respaldo (.json):</label>
-            <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)" style="font-size: 0.8em; padding: 5px;">
-            <p style="font-size: 0.7em; color: gray;">Selecciona el archivo que creaste con el texto del correo.</p>
+            <h4>Seguridad</h4>
+            <button id="btn-correo" class="btn-principal" style="background: var(--verde)" onclick="enviarAlCorreo()">📧 Enviar Respaldo</button>
+            <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)" style="font-size: 0.8em;">
         </div>
     </div>
 
@@ -131,9 +130,9 @@
 
         (function(){ emailjs.init(PUBLIC_KEY); })();
 
-        let pedidos = JSON.parse(localStorage.getItem('flor_v22_pedidos')) || [];
-        let gastos = JSON.parse(localStorage.getItem('flor_v22_gastos')) || [];
-        let clientes = JSON.parse(localStorage.getItem('flor_v22_clientes')) || [];
+        let pedidos = JSON.parse(localStorage.getItem('flor_v24_pedidos')) || [];
+        let gastos = JSON.parse(localStorage.getItem('flor_v24_gastos')) || [];
+        let clientes = JSON.parse(localStorage.getItem('flor_v24_clientes')) || [];
         let chartBarras = null;
 
         function toggleEnvio() {
@@ -180,18 +179,6 @@
             if(cT && !clientes.find(c => c.tel === cT)) clientes.push({ nombre: cN, tel: cT });
             actualizar();
             document.getElementById('campos-envio').classList.add('hidden');
-            document.getElementById('total-sugerido').innerText = '$0';
-        }
-
-        function editarCliente(telViejo) {
-            const c = clientes.find(cli => cli.tel === telViejo);
-            const nN = prompt("Nombre:", c.nombre);
-            const nT = prompt("Teléfono:", c.tel);
-            if (nN && nT) {
-                clientes = clientes.map(cli => cli.tel === telViejo ? { nombre: nN, tel: nT } : cli);
-                pedidos = pedidos.map(p => p.tel === telViejo ? { ...p, cliente: nN, tel: nT } : p);
-                actualizar();
-            }
         }
 
         function agregarGasto() {
@@ -206,17 +193,28 @@
         }
 
         function borrarItem(id, t) {
-            if(!confirm("¿Borrar registro?")) return;
+            if(!confirm("¿Borrar este registro?")) return;
             if(t === 'pedido') pedidos = pedidos.filter(p => p.id !== id);
             else if(t === 'gasto') gastos = gastos.filter(g => g.id !== id);
             else if(t === 'cliente') clientes = clientes.filter(c => c.tel !== id);
             actualizar();
         }
 
+        function editarCliente(telViejo) {
+            const c = clientes.find(cli => cli.tel === telViejo);
+            const nN = prompt("Nuevo nombre:", c.nombre);
+            const nT = prompt("Nuevo teléfono:", c.tel);
+            if (nN && nT) {
+                clientes = clientes.map(cli => cli.tel === telViejo ? { nombre: nN, tel: nT } : cli);
+                pedidos = pedidos.map(p => p.tel === telViejo ? { ...p, cliente: nN, tel: nT } : p);
+                actualizar();
+            }
+        }
+
         function actualizar() {
-            localStorage.setItem('flor_v22_pedidos', JSON.stringify(pedidos));
-            localStorage.setItem('flor_v22_gastos', JSON.stringify(gastos));
-            localStorage.setItem('flor_v22_clientes', JSON.stringify(clientes));
+            localStorage.setItem('flor_v24_pedidos', JSON.stringify(pedidos));
+            localStorage.setItem('flor_v24_gastos', JSON.stringify(gastos));
+            localStorage.setItem('flor_v24_clientes', JSON.stringify(clientes));
             renderizar();
             document.querySelectorAll('input, textarea').forEach(i => i.type !== 'file' ? i.value = '' : null);
         }
@@ -227,38 +225,49 @@
             let v = 0, g = 0;
             
             pedidos.sort((a,b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)).forEach(p => { 
-                const montoActual = p.estado === 'Entregado' ? p.costo : p.pagado;
-                v += montoActual;
+                const monto = p.estado === 'Entregado' ? p.costo : p.pagado;
+                v += monto;
                 const faltante = p.costo - p.pagado;
                 const col = p.estado === 'Entregado' ? 'var(--verde)' : (p.estado === 'En proceso' ? 'var(--naranja)' : (p.estado === 'Surtido' ? 'var(--azul)' : 'var(--gris)'));
                 
+                // Generar link de Google Maps
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.direccion)}`;
+
                 lp.innerHTML += `
                 <div class="item-lista" style="border-left-color:${col}">
                     <div class="info-row">
-                        <span><b>${p.cliente}</b> ${p.tipoEntrega === 'Envio' ? '🚚' : '🏠'}<br><small>📅 ${p.fecha} | ⏰ ${p.hora}</small></span>
+                        <span><b>${p.cliente}</b> ${p.tipoEntrega === 'Envio' ? '🚚' : '🏠'}<br><small>${p.fecha} | ${p.hora}</small></span>
                         <button onclick="borrarItem(${p.id}, 'pedido')" style="color:red; border:none; background:none;">✕</button>
                     </div>
-                    ${p.tipoEntrega === 'Envio' ? `<div style="font-size:0.75em; color:var(--azul); margin-bottom:5px;">📍 ${p.direccion}</div>` : ''}
+                    ${p.tipoEntrega === 'Envio' ? `
+                        <div style="font-size:0.75em; color:var(--azul); margin-bottom:5px; display:flex; align-items:center;">
+                            📍 ${p.direccion}
+                            <a href="${mapsUrl}" target="_blank" class="btn-maps">🗺️ Ver Mapa</a>
+                        </div>` : ''}
                     ${p.notas ? `<div class="nota-box">📝 ${p.notas}</div>` : ''}
-                    <div class="info-row" style="margin-top:10px; margin-bottom:0">
-                        <div>
-                            <select class="status-select" onchange="cambiarEstado(${p.id}, this.value)">
-                                <option value="En espera" ${p.estado === 'En espera' ? 'selected' : ''}>⏳ Espera</option>
-                                <option value="En proceso" ${p.estado === 'En proceso' ? 'selected' : ''}>🌿 Proceso</option>
-                                <option value="Surtido" ${p.estado === 'Surtido' ? 'selected' : ''}>💐 Surtido</option>
-                                <option value="Entregado" ${p.estado === 'Entregado' ? 'selected' : ''}>✅ Entregado</option>
-                            </select>
-                            ${(p.estado !== 'Entregado' && faltante > 0) ? `<br><span class="pago-alerta">Faltan $${faltante}</span>` : ''}
-                        </div>
-                        <b style="color:var(--verde)">$${montoActual}</b>
+                    <div class="info-row" style="margin-top:10px">
+                        <select class="status-select" onchange="cambiarEstado(${p.id}, this.value)">
+                            <option value="En espera" ${p.estado === 'En espera' ? 'selected' : ''}>⏳ Espera</option>
+                            <option value="En proceso" ${p.estado === 'En proceso' ? 'selected' : ''}>🌿 Proceso</option>
+                            <option value="Surtido" ${p.estado === 'Surtido' ? 'selected' : ''}>💐 Surtido</option>
+                            <option value="Entregado" ${p.estado === 'Entregado' ? 'selected' : ''}>✅ Entregado</option>
+                        </select>
+                        <b style="color:var(--verde)">$${monto} ${(p.estado !== 'Entregado' && faltante > 0) ? `<small style="color:red">(Falta $${faltante})</small>` : ''}</b>
                     </div>
                 </div>`; 
             });
             
-            gastos.forEach(ga => { g += ga.monto; lg.innerHTML += `<div class="item-lista" style="border-left-color:var(--rojo); display:flex; justify-content:space-between; align-items:center;"><span><b>${ga.concepto}</b></span><span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="color:red; border:none; background:none;">✕</button></span></div>`; });
+            gastos.forEach(ga => { g += ga.monto; lg.innerHTML += `<div class="item-lista" style="border-left-color:var(--rojo); display:flex; justify-content:space-between"><span><b>${ga.concepto}</b> <small>(${ga.categoria})</small></span><span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="color:red; border:none; background:none;">✕</button></span></div>`; });
 
             clientes.sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(c => {
-                lc.innerHTML += `<div class="item-lista" style="border-left-color:var(--azul); display:flex; justify-content:space-between; align-items:center;"><span><b>${c.nombre}</b><br><small>${c.tel}</small></span><div><a href="https://wa.me/52${c.tel}" target="_blank" class="btn-wpp">💬</a><button onclick="editarCliente('${c.tel}')" class="btn-accion">✏️</button></div></div>`;
+                lc.innerHTML += `<div class="item-lista" style="border-left-color:var(--azul); display:flex; justify-content:space-between; align-items:center;">
+                    <span><b>${c.nombre}</b><br><small>${c.tel}</small></span>
+                    <div>
+                        <a href="https://wa.me/52${c.tel}" target="_blank" class="btn-wpp">💬</a>
+                        <button onclick="editarCliente('${c.tel}')" class="btn-accion">✏️</button>
+                        <button onclick="borrarItem('${c.tel}', 'cliente')" class="btn-accion" style="color:var(--rojo)">🗑️</button>
+                    </div>
+                </div>`;
             });
             
             document.getElementById('total-ventas').innerText = '$' + v.toFixed(2);
@@ -270,27 +279,23 @@
             const ctxB = document.getElementById('graficaBarras').getContext('2d');
             let tV = parseFloat(document.getElementById('total-ventas').innerText.replace('$','')), tG = gastos.reduce((a, b) => a + b.monto, 0);
             if(chartBarras) chartBarras.destroy();
-            chartBarras = new Chart(ctxB, { type: 'bar', data: { labels: ['Ventas', 'Gastos'], datasets: [{ label: '$ Pesos', data: [tV, tG], backgroundColor: ['#4caf50', '#f44336'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+            chartBarras = new Chart(ctxB, { type: 'bar', data: { labels: ['Ventas', 'Gastos'], datasets: [{ label: '$', data: [tV, tG], backgroundColor: ['#4caf50', '#f44336'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
 
         function enviarAlCorreo() {
             const btn = document.getElementById('btn-correo'); btn.innerText = "Enviando..."; btn.disabled = true;
             const dataStr = JSON.stringify({ pedidos, gastos, clientes, fecha: new Date().toLocaleString() });
-            emailjs.send(SERVICE_ID, TEMPLATE_ID, { datos_json: dataStr, to_email: MI_CORREO }).then(() => { alert("¡Respaldo enviado al correo!"); btn.innerText = "📧 Enviar Respaldo"; btn.disabled = false; });
+            emailjs.send(SERVICE_ID, TEMPLATE_ID, { datos_json: dataStr, to_email: MI_CORREO }).then(() => { alert("¡Respaldo enviado!"); btn.innerText = "📧 Enviar Respaldo"; btn.disabled = false; });
         }
 
         function importarJSON(e) {
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = (event) => { 
                 try {
-                    const data = JSON.parse(event.target.result);
-                    pedidos = data.pedidos || [];
-                    gastos = data.gastos || [];
-                    clientes = data.clientes || [];
-                    actualizar();
-                    alert("¡Datos importados con éxito!");
-                    location.reload();
-                } catch(err) { alert("El archivo no es válido"); }
+                    const d = JSON.parse(event.target.result); 
+                    pedidos = d.pedidos || []; gastos = d.gastos || []; clientes = d.clientes || []; 
+                    actualizar(); location.reload(); 
+                } catch(e) { alert("Archivo no válido"); }
             };
             reader.readAsText(e.target.files[0]);
         }
