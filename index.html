@@ -3,34 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>De flor en flor - Versión 24</title>
+    <title>De flor en flor - Versión 32</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --rosa: #d81b60; --verde: #4caf50; --azul: #2196f3; --rojo: #f44336; --naranja: #ff9800; --gris: #757575; --wpp: #25d366; }
+        :root { --rosa: #d81b60; --verde: #4caf50; --azul: #2196f3; --rojo: #f44336; --naranja: #ff9800; --gris: #757575; --morado: #9c27b0; --wpp: #25d366; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #fdf2f8; padding: 15px; margin: 0; color: #333; padding-bottom: 50px; }
         .tab-container { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; z-index: 100; background: #fdf2f8; padding: 10px 0; }
         .tab { flex: 1; padding: 12px 2px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.75em; text-transform: uppercase; }
         .tab.active { background: var(--rosa); color: white; box-shadow: 0 4px 10px rgba(216, 27, 96, 0.3); }
-        .seccion-contenido { display: none; animation: fadeIn 0.3s; }
+        .seccion-contenido { display: none; }
         .seccion-contenido.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .resumen-global { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+        .resumen-global { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 20px; }
         .caja-item { background: white; padding: 10px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .caja-item b { font-size: 0.9em; display: block; margin-top: 4px; }
+        .caja-item b { font-size: 1.1em; display: block; margin-top: 4px; }
+        .sub-resumen-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; font-size: 0.65em; color: #666; margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; border-top: 4px solid var(--rosa); }
         label { font-size: 0.8em; font-weight: bold; color: var(--rosa); margin-top: 5px; display: block; }
         input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-family: inherit; }
         .btn-principal { background: var(--rosa); color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
-        .item-lista { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid #ccc; display: block; position: relative; }
+        .item-lista { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid #ccc; position: relative; }
         .info-row { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
-        .status-select { width: auto; padding: 5px; margin: 0; font-size: 12px; height: auto; border-radius: 4px; }
-        .btn-wpp { background: var(--wpp); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.75em; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: bold; }
-        .btn-maps { background: var(--azul); color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 0.75em; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: bold; margin-left: 5px; }
-        .pago-alerta { color: var(--rojo); font-weight: bold; font-size: 0.8em; }
+        .status-select { width: auto; padding: 5px; font-size: 12px; border-radius: 4px; }
+        .detalles-pedido { font-size: 0.85em; background: #fff5f8; padding: 8px; border-radius: 6px; margin: 8px 0; color: #555; }
+        .metodo-badge { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; display: inline-block; }
         .hidden { display: none; }
-        .nota-box { background: #f9f9f9; padding: 8px; border-radius: 5px; font-size: 0.85em; margin-top: 5px; border: 1px dashed #ccc; font-style: italic; }
-        .btn-accion { border:none; background:none; cursor:pointer; font-size: 14px; padding: 5px; }
+        .btn-edit { color: var(--azul); border: none; background: none; font-size: 1.2em; cursor: pointer; margin-right: 10px; }
     </style>
 </head>
 <body>
@@ -38,9 +36,18 @@
     <h2 style="text-align:center; color:var(--rosa); margin: 10px 0;">🌸 De flor en flor</h2>
 
     <div class="resumen-global">
-        <div class="caja-item"><span>Ventas</span><b id="total-ventas" style="color:var(--verde)">$0</b></div>
-        <div class="caja-item"><span>Gastos</span><b id="total-gastos" style="color:var(--rojo)">$0</b></div>
-        <div class="caja-item"><span>Utilidad</span><b id="total-utilidad" style="color:var(--rosa)">$0</b></div>
+        <div class="caja-item">
+            <span>Ventas Totales</span><b id="total-ventas" style="color:var(--verde)">$0</b>
+            <div class="sub-resumen-grid">
+                <div>💵 Efec.<br><span id="v-efectivo">$0</span></div>
+                <div>💳 Trans.<br><span id="v-trans">$0</span></div>
+                <div>💳 Tarj.<br><span id="v-tarjeta">$0</span></div>
+            </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+            <div class="caja-item"><span>Gastos</span><b id="total-gastos" style="color:var(--rojo)">$0</b></div>
+            <div class="caja-item"><span>Utilidad</span><b id="total-utilidad" style="color:var(--rosa)">$0</b></div>
+        </div>
     </div>
 
     <div class="tab-container">
@@ -51,20 +58,20 @@
     </div>
 
     <div id="sec-pedidos" class="seccion-contenido active">
-        <div class="card">
-            <h4>Nuevo Pedido</h4>
+        <div class="card" id="formulario-pedido">
+            <h4 id="form-titulo">Nuevo Pedido</h4>
+            <input type="hidden" id="edit-id">
             <input type="text" id="p-cliente" placeholder="Nombre del cliente">
             <input type="tel" id="p-tel" placeholder="WhatsApp (10 dígitos)">
-            <input type="text" id="p-arreglo" placeholder="Descripción del arreglo">
+            <input type="text" id="p-arreglo" placeholder="¿Qué ramo es?">
             
-            <label>Tipo de entrega:</label>
             <select id="p-entrega" onchange="toggleEnvio()">
                 <option value="Local">🏠 Recoge en Local</option>
                 <option value="Envio">🚚 Envío a domicilio</option>
             </select>
 
             <div id="campos-envio" class="hidden">
-                <input type="text" id="p-direccion" placeholder="Dirección completa">
+                <input type="text" id="p-direccion" placeholder="Dirección para Google Maps">
                 <input type="number" id="p-costo-envio" placeholder="Costo de envío $" oninput="calcularTotalSugerido()">
             </div>
 
@@ -72,14 +79,22 @@
                 <input type="number" id="p-costo" placeholder="Costo Arreglo $" oninput="calcularTotalSugerido()">
                 <input type="number" id="p-pagado" placeholder="Abonó $">
             </div>
-            <div style="font-size: 0.8em; color: var(--rosa); margin-bottom: 10px;">Total Sugerido: <b id="total-sugerido">$0</b></div>
 
+            <label>Método de Pago:</label>
+            <select id="p-metodo">
+                <option value="Efectivo">💵 Efectivo</option>
+                <option value="Transferencia">💳 Transferencia</option>
+                <option value="Tarjeta">💳 Tarjeta</option>
+            </select>
+
+            <div style="font-size: 0.8em; color: var(--rosa); margin-bottom: 10px;">Total Sugerido: <b id="total-sugerido">$0</b></div>
             <div style="display:flex; gap:5px;">
-                <div style="flex:1"><label>Fecha:</label><input type="date" id="p-fecha"></div>
-                <div style="flex:1"><label>Hora:</label><input type="time" id="p-hora"></div>
+                <input type="date" id="p-fecha">
+                <input type="time" id="p-hora">
             </div>
             <textarea id="p-notas" placeholder="Dedicatoria o notas..."></textarea>
-            <button class="btn-principal" onclick="agregarPedido()">Agendar Pedido</button>
+            <button class="btn-principal" id="btn-guardar" onclick="agregarPedido()">Agendar Pedido</button>
+            <button class="btn-principal hidden" id="btn-cancelar" onclick="cancelarEdicion()" style="background:var(--gris)">Cancelar</button>
         </div>
         <div id="lista-pedidos"></div>
     </div>
@@ -87,57 +102,43 @@
     <div id="sec-gastos" class="seccion-contenido">
         <div class="card">
             <h4>Registrar Gasto</h4>
-            <input type="text" id="g-concepto" placeholder="Ej: Pago de luz">
+            <input type="text" id="g-concepto" placeholder="Concepto">
             <select id="g-categoria">
                 <option value="Flores e Insumos">🌸 Flores e Insumos</option>
-                <option value="Renta y Servicios">🏠 Renta y Servicios</option>
-                <option value="Sueldos">👥 Sueldos</option>
-                <option value="Publicidad">📱 Publicidad</option>
-                <option value="Ahorro">💰 Ahorro</option>
+                <option value="Cuota de envíos">🚚 Cuota de envíos</option>
+                <option value="Gasolina">⛽ Gasolina</option>
                 <option value="Otros">📦 Otros</option>
             </select>
             <input type="number" id="g-monto" placeholder="Monto $">
-            <label>Fecha:</label><input type="date" id="g-fecha">
+            <input type="date" id="g-fecha">
             <button class="btn-principal" style="background:var(--rojo)" onclick="agregarGasto()">Guardar Gasto</button>
         </div>
         <div id="lista-gastos"></div>
     </div>
 
     <div id="sec-clientes" class="seccion-contenido">
-        <div class="card" style="border-top-color: var(--azul)">
-            <h4>Directorio de Clientes</h4>
-        </div>
         <div id="lista-clientes"></div>
     </div>
 
     <div id="sec-reportes" class="seccion-contenido">
-        <div class="card">
-            <h4>Balance General</h4>
-            <div style="height:200px"><canvas id="graficaBarras"></canvas></div>
-        </div>
+        <div class="card"><h4>Balance de Pagos</h4><div style="height:200px;"><canvas id="graficaBarras"></canvas></div></div>
         <div class="card" style="border-top-color: var(--verde)">
-            <h4>Seguridad</h4>
-            <button id="btn-correo" class="btn-principal" style="background: var(--verde)" onclick="enviarAlCorreo()">📧 Enviar Respaldo</button>
-            <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)" style="font-size: 0.8em;">
+            <button class="btn-principal" style="background: var(--verde)" onclick="enviarAlCorreo()">📧 Respaldo Correo</button>
+            <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)">
         </div>
     </div>
 
     <script>
-        const PUBLIC_KEY = "ggvE7QUjO8FoXcNCR"; 
-        const TEMPLATE_ID = "template_1ibwgrt";
-        const SERVICE_ID = "service_abqmyha";
-        const MI_CORREO = "ivanesakyop@gmail.com";
-
+        const PUBLIC_KEY = "ggvE7QUjO8FoXcNCR", TEMPLATE_ID = "template_1ibwgrt", SERVICE_ID = "service_abqmyha", MI_CORREO = "ivanesakyop@gmail.com";
         (function(){ emailjs.init(PUBLIC_KEY); })();
 
-        let pedidos = JSON.parse(localStorage.getItem('flor_v24_pedidos')) || [];
-        let gastos = JSON.parse(localStorage.getItem('flor_v24_gastos')) || [];
-        let clientes = JSON.parse(localStorage.getItem('flor_v24_clientes')) || [];
+        let pedidos = JSON.parse(localStorage.getItem('flor_v25_pedidos')) || [];
+        let gastos = JSON.parse(localStorage.getItem('flor_v25_gastos')) || [];
+        let clientes = JSON.parse(localStorage.getItem('flor_v25_clientes')) || [];
         let chartBarras = null;
 
         function toggleEnvio() {
-            const esEnvio = document.getElementById('p-entrega').value === 'Envio';
-            document.getElementById('campos-envio').classList.toggle('hidden', !esEnvio);
+            document.getElementById('campos-envio').classList.toggle('hidden', document.getElementById('p-entrega').value !== 'Envio');
             calcularTotalSugerido();
         }
 
@@ -156,34 +157,74 @@
         }
 
         function agregarPedido() {
-            const cN = document.getElementById('p-cliente').value;
-            const cT = document.getElementById('p-tel').value;
-            const envio = parseFloat(document.getElementById('p-costo-envio').value) || 0;
-            const costoArr = parseFloat(document.getElementById('p-costo').value) || 0;
-
+            const editId = document.getElementById('edit-id').value;
+            const cA = parseFloat(document.getElementById('p-costo').value) || 0;
+            const cE = parseFloat(document.getElementById('p-costo-envio').value) || 0;
+            
             const p = { 
-                id: Date.now(), cliente: cN, tel: cT,
+                id: editId ? parseInt(editId) : Date.now(),
+                cliente: document.getElementById('p-cliente').value, 
+                tel: document.getElementById('p-tel').value,
                 arreglo: document.getElementById('p-arreglo').value, 
                 tipoEntrega: document.getElementById('p-entrega').value,
-                direccion: document.getElementById('p-direccion').value,
-                costo: costoArr + envio, 
+                direccion: document.getElementById('p-direccion').value, 
+                costoArreglo: cA, 
+                costoEnvio: cE, 
+                costoTotal: cA + cE,
                 pagado: parseFloat(document.getElementById('p-pagado').value) || 0, 
+                metodoPago: document.getElementById('p-metodo').value,
                 fecha: document.getElementById('p-fecha').value || new Date().toISOString().split('T')[0],
-                hora: document.getElementById('p-hora').value || '--:--',
-                notas: document.getElementById('p-notas').value || '',
-                estado: 'En espera' 
+                hora: document.getElementById('p-hora').value || '--:--', 
+                notas: document.getElementById('p-notas').value, 
+                estado: editId ? pedidos.find(x => x.id == editId).estado : 'En espera' 
             };
 
-            if(!cN) return alert("Nombre de cliente necesario");
-            pedidos.push(p);
-            if(cT && !clientes.find(c => c.tel === cT)) clientes.push({ nombre: cN, tel: cT });
+            if(!p.cliente) return alert("Nombre obligatorio");
+
+            if(editId) {
+                pedidos = pedidos.map(x => x.id == editId ? p : x);
+                cancelarEdicion();
+            } else {
+                pedidos.push(p);
+                if(p.tel && !clientes.find(c => c.tel === p.tel)) clientes.push({ nombre: p.cliente, tel: p.tel });
+            }
             actualizar();
-            document.getElementById('campos-envio').classList.add('hidden');
+        }
+
+        function editarPedido(id) {
+            const p = pedidos.find(x => x.id === id);
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('p-cliente').value = p.cliente;
+            document.getElementById('p-tel').value = p.tel;
+            document.getElementById('p-arreglo').value = p.arreglo;
+            document.getElementById('p-entrega').value = p.tipoEntrega;
+            document.getElementById('p-direccion').value = p.direccion || '';
+            document.getElementById('p-costo-envio').value = p.costoEnvio || 0;
+            document.getElementById('p-costo').value = p.costoArreglo || p.costo || 0;
+            document.getElementById('p-pagado').value = p.pagado || 0;
+            document.getElementById('p-metodo').value = p.metodoPago || 'Efectivo';
+            document.getElementById('p-fecha').value = p.fecha;
+            document.getElementById('p-hora').value = p.hora;
+            document.getElementById('p-notas').value = p.notas || '';
+            
+            document.getElementById('form-titulo').innerText = "✏️ Editando Pedido";
+            document.getElementById('btn-guardar').innerText = "Actualizar Pedido";
+            document.getElementById('btn-cancelar').classList.remove('hidden');
+            toggleEnvio();
+            window.scrollTo(0,0);
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('form-titulo').innerText = "Nuevo Pedido";
+            document.getElementById('btn-guardar').innerText = "Agendar Pedido";
+            document.getElementById('btn-cancelar').classList.add('hidden');
+            actualizar(); // Esto limpia los inputs
         }
 
         function agregarGasto() {
             const g = { id: Date.now(), concepto: document.getElementById('g-concepto').value, categoria: document.getElementById('g-categoria').value, monto: parseFloat(document.getElementById('g-monto').value) || 0, fecha: document.getElementById('g-fecha').value || new Date().toISOString().split('T')[0] };
-            if(!g.concepto) return alert("Concepto vacío");
+            if(!g.concepto) return alert("Falta concepto");
             gastos.push(g); actualizar();
         }
 
@@ -193,99 +234,93 @@
         }
 
         function borrarItem(id, t) {
-            if(!confirm("¿Borrar este registro?")) return;
+            if(!confirm("¿Borrar?")) return;
             if(t === 'pedido') pedidos = pedidos.filter(p => p.id !== id);
             else if(t === 'gasto') gastos = gastos.filter(g => g.id !== id);
             else if(t === 'cliente') clientes = clientes.filter(c => c.tel !== id);
             actualizar();
         }
 
-        function editarCliente(telViejo) {
-            const c = clientes.find(cli => cli.tel === telViejo);
-            const nN = prompt("Nuevo nombre:", c.nombre);
-            const nT = prompt("Nuevo teléfono:", c.tel);
-            if (nN && nT) {
-                clientes = clientes.map(cli => cli.tel === telViejo ? { nombre: nN, tel: nT } : cli);
-                pedidos = pedidos.map(p => p.tel === telViejo ? { ...p, cliente: nN, tel: nT } : p);
-                actualizar();
-            }
-        }
-
         function actualizar() {
-            localStorage.setItem('flor_v24_pedidos', JSON.stringify(pedidos));
-            localStorage.setItem('flor_v24_gastos', JSON.stringify(gastos));
-            localStorage.setItem('flor_v24_clientes', JSON.stringify(clientes));
+            localStorage.setItem('flor_v25_pedidos', JSON.stringify(pedidos));
+            localStorage.setItem('flor_v25_gastos', JSON.stringify(gastos));
+            localStorage.setItem('flor_v25_clientes', JSON.stringify(clientes));
             renderizar();
-            document.querySelectorAll('input, textarea').forEach(i => i.type !== 'file' ? i.value = '' : null);
+            document.querySelectorAll('#formulario-pedido input, #formulario-pedido textarea').forEach(i => i.value = '');
+            document.getElementById('p-entrega').value = "Local";
+            toggleEnvio();
         }
 
         function renderizar() {
             const lp = document.getElementById('lista-pedidos'), lg = document.getElementById('lista-gastos'), lc = document.getElementById('lista-clientes');
             lp.innerHTML = ''; lg.innerHTML = ''; lc.innerHTML = '';
-            let v = 0, g = 0;
+            let vT = 0, vE = 0, vTr = 0, vTa = 0, gT = 0;
             
-            pedidos.sort((a,b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora)).forEach(p => { 
-                const monto = p.estado === 'Entregado' ? p.costo : p.pagado;
-                v += monto;
-                const faltante = p.costo - p.pagado;
-                const col = p.estado === 'Entregado' ? 'var(--verde)' : (p.estado === 'En proceso' ? 'var(--naranja)' : (p.estado === 'Surtido' ? 'var(--azul)' : 'var(--gris)'));
+            pedidos.sort((a,b) => b.id - a.id).forEach(p => { 
+                const total = p.costoTotal || p.costo || (p.costoArreglo + (p.costoEnvio || 0)) || 0;
+                const pagado = p.pagado || 0;
+                const montoActual = p.estado === 'Entregado' ? total : pagado;
                 
-                // Generar link de Google Maps
-                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.direccion)}`;
+                vT += montoActual;
+                if(p.metodoPago === 'Transferencia') vTr += montoActual; 
+                else if(p.metodoPago === 'Tarjeta') vTa += montoActual;
+                else vE += montoActual;
+                
+                const colMetodo = p.metodoPago === 'Transferencia' ? 'var(--azul)' : (p.metodoPago === 'Tarjeta' ? 'var(--morado)' : 'var(--verde)');
+                const colEstado = p.estado === 'Entregado' ? 'var(--verde)' : (p.estado === 'En proceso' ? 'var(--naranja)' : 'var(--gris)');
 
-                lp.innerHTML += `
-                <div class="item-lista" style="border-left-color:${col}">
+                lp.innerHTML += `<div class="item-lista" style="border-left-color:${colEstado}">
                     <div class="info-row">
-                        <span><b>${p.cliente}</b> ${p.tipoEntrega === 'Envio' ? '🚚' : '🏠'}<br><small>${p.fecha} | ${p.hora}</small></span>
-                        <button onclick="borrarItem(${p.id}, 'pedido')" style="color:red; border:none; background:none;">✕</button>
+                        <span><b>${p.cliente}</b><br><small>${p.fecha} | ${p.hora}</small></span>
+                        <div>
+                            <button class="btn-edit" onclick="editarPedido(${p.id})">✏️</button>
+                            <button onclick="borrarItem(${p.id}, 'pedido')" style="color:red; border:none; background:none;">✕</button>
+                        </div>
                     </div>
-                    ${p.tipoEntrega === 'Envio' ? `
-                        <div style="font-size:0.75em; color:var(--azul); margin-bottom:5px; display:flex; align-items:center;">
-                            📍 ${p.direccion}
-                            <a href="${mapsUrl}" target="_blank" class="btn-maps">🗺️ Ver Mapa</a>
-                        </div>` : ''}
-                    ${p.notas ? `<div class="nota-box">📝 ${p.notas}</div>` : ''}
+                    <div class="detalles-pedido">
+                        <b>Ramo:</b> ${p.arreglo || 'S/D'}<br>
+                        <b>Total:</b> $${total} | <b>Abonó:</b> $${pagado} <span style="color:${colMetodo}; font-weight:bold;">(${p.metodoPago || 'Efectivo'})</span>
+                    </div>
                     <div class="info-row" style="margin-top:10px">
                         <select class="status-select" onchange="cambiarEstado(${p.id}, this.value)">
                             <option value="En espera" ${p.estado === 'En espera' ? 'selected' : ''}>⏳ Espera</option>
-                            <option value="En proceso" ${p.estado === 'En proceso' ? 'selected' : ''}>🌿 Proceso</option>
-                            <option value="Surtido" ${p.estado === 'Surtido' ? 'selected' : ''}>💐 Surtido</option>
                             <option value="Entregado" ${p.estado === 'Entregado' ? 'selected' : ''}>✅ Entregado</option>
                         </select>
-                        <b style="color:var(--verde)">$${monto} ${(p.estado !== 'Entregado' && faltante > 0) ? `<small style="color:red">(Falta $${faltante})</small>` : ''}</b>
+                        <b style="color:var(--verde)">$${montoActual}</b>
                     </div>
                 </div>`; 
             });
             
-            gastos.forEach(ga => { g += ga.monto; lg.innerHTML += `<div class="item-lista" style="border-left-color:var(--rojo); display:flex; justify-content:space-between"><span><b>${ga.concepto}</b> <small>(${ga.categoria})</small></span><span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="color:red; border:none; background:none;">✕</button></span></div>`; });
-
-            clientes.sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(c => {
-                lc.innerHTML += `<div class="item-lista" style="border-left-color:var(--azul); display:flex; justify-content:space-between; align-items:center;">
-                    <span><b>${c.nombre}</b><br><small>${c.tel}</small></span>
-                    <div>
-                        <a href="https://wa.me/52${c.tel}" target="_blank" class="btn-wpp">💬</a>
-                        <button onclick="editarCliente('${c.tel}')" class="btn-accion">✏️</button>
-                        <button onclick="borrarItem('${c.tel}', 'cliente')" class="btn-accion" style="color:var(--rojo)">🗑️</button>
-                    </div>
-                </div>`;
-            });
+            gastos.forEach(ga => { gT += ga.monto; lg.innerHTML += `<div class="item-lista" style="border-left:6px solid var(--rojo); padding:10px; display:flex; justify-content:space-between"><span>${ga.concepto}</span><span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="color:red; border:none; background:none;">✕</button></span></div>`; });
+            clientes.forEach(c => { lc.innerHTML += `<div class="item-lista" style="border-left:6px solid var(--azul); padding:10px; display:flex; justify-content:space-between"><span><b>${c.nombre}</b></span><span><button onclick="borrarItem('${c.tel}', 'cliente')" style="color:var(--rojo); border:none; background:none;">🗑️</button></span></div>`; });
             
-            document.getElementById('total-ventas').innerText = '$' + v.toFixed(2);
-            document.getElementById('total-gastos').innerText = '$' + g.toFixed(2);
-            document.getElementById('total-utilidad').innerText = '$' + (v - g).toFixed(2);
+            document.getElementById('total-ventas').innerText = '$' + vT.toFixed(2);
+            document.getElementById('v-efectivo').innerText = '$' + vE.toFixed(2);
+            document.getElementById('v-trans').innerText = '$' + vTr.toFixed(2);
+            document.getElementById('v-tarjeta').innerText = '$' + vTa.toFixed(2);
+            document.getElementById('total-gastos').innerText = '$' + gT.toFixed(2);
+            document.getElementById('total-utilidad').innerText = '$' + (vT - gT).toFixed(2);
         }
 
         function generarReportes() {
-            const ctxB = document.getElementById('graficaBarras').getContext('2d');
-            let tV = parseFloat(document.getElementById('total-ventas').innerText.replace('$','')), tG = gastos.reduce((a, b) => a + b.monto, 0);
+            const ctx = document.getElementById('graficaBarras').getContext('2d');
             if(chartBarras) chartBarras.destroy();
-            chartBarras = new Chart(ctxB, { type: 'bar', data: { labels: ['Ventas', 'Gastos'], datasets: [{ label: '$', data: [tV, tG], backgroundColor: ['#4caf50', '#f44336'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+            chartBarras = new Chart(ctx, { 
+                type: 'bar', 
+                data: { 
+                    labels: ['Efec.', 'Transf.', 'Tarj.'], 
+                    datasets: [{ label: 'Ventas $', data: [
+                        parseFloat(document.getElementById('v-efectivo').innerText.replace('$','')), 
+                        parseFloat(document.getElementById('v-trans').innerText.replace('$','')),
+                        parseFloat(document.getElementById('v-tarjeta').innerText.replace('$',''))
+                    ], backgroundColor: ['#4caf50', '#2196f3', '#9c27b0'] }] 
+                }, 
+                options: { responsive: true, maintainAspectRatio: false } 
+            });
         }
 
         function enviarAlCorreo() {
-            const btn = document.getElementById('btn-correo'); btn.innerText = "Enviando..."; btn.disabled = true;
-            const dataStr = JSON.stringify({ pedidos, gastos, clientes, fecha: new Date().toLocaleString() });
-            emailjs.send(SERVICE_ID, TEMPLATE_ID, { datos_json: dataStr, to_email: MI_CORREO }).then(() => { alert("¡Respaldo enviado!"); btn.innerText = "📧 Enviar Respaldo"; btn.disabled = false; });
+            emailjs.send(SERVICE_ID, TEMPLATE_ID, { datos_json: JSON.stringify({ pedidos, gastos, clientes }), to_email: MI_CORREO }).then(() => alert("Respaldo enviado"));
         }
 
         function importarJSON(e) {
@@ -295,7 +330,7 @@
                     const d = JSON.parse(event.target.result); 
                     pedidos = d.pedidos || []; gastos = d.gastos || []; clientes = d.clientes || []; 
                     actualizar(); location.reload(); 
-                } catch(e) { alert("Archivo no válido"); }
+                } catch(err) { alert("Error"); }
             };
             reader.readAsText(e.target.files[0]);
         }
