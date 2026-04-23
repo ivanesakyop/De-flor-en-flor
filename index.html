@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>De flor en flor - Versión 33</title>
+    <title>De flor en flor - Versión 34</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --rosa: #d81b60; --verde: #4caf50; --azul: #2196f3; --rojo: #f44336; --naranja: #ff9800; --gris: #757575; --morado: #9c27b0; --wpp: #25d366; }
+        :root { --rosa: #d81b60; --verde: #4caf50; --azul: #2196f3; --rojo: #f44336; --naranja: #ff9800; --gris: #757575; --morado: #9c27b0; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #fdf2f8; padding: 15px; margin: 0; color: #333; padding-bottom: 50px; }
         .tab-container { display: flex; gap: 5px; margin-bottom: 15px; position: sticky; top: 0; z-index: 100; background: #fdf2f8; padding: 10px 0; }
         .tab { flex: 1; padding: 12px 2px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.75em; text-transform: uppercase; }
@@ -16,17 +16,16 @@
         .seccion-contenido.active { display: block; }
         .resumen-global { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 20px; }
         .caja-item { background: white; padding: 10px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .caja-item b { font-size: 1.1em; display: block; margin-top: 4px; }
         .sub-resumen-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; font-size: 0.65em; color: #666; margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; border-top: 4px solid var(--rosa); }
-        label { font-size: 0.8em; font-weight: bold; color: var(--rosa); margin-top: 5px; display: block; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-family: inherit; }
-        .btn-principal { background: var(--rosa); color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn-principal { background: var(--rosa); color: white; border: none; padding: 14px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; }
         .item-lista { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid #ccc; position: relative; }
-        .info-row { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
-        .status-select { width: auto; padding: 5px; font-size: 12px; border-radius: 4px; }
-        .detalles-pedido { font-size: 0.85em; background: #fff5f8; padding: 8px; border-radius: 6px; margin: 8px 0; color: #555; }
-        .btn-edit { color: var(--azul); border: none; background: none; font-size: 1.2em; cursor: pointer; margin-right: 10px; }
+        .info-row { display: flex; justify-content: space-between; align-items: start; }
+        .detalles-pedido { font-size: 0.85em; background: #fff5f8; padding: 8px; border-radius: 6px; margin: 8px 0; color: #555; line-height: 1.4; }
+        .btn-maps { background: var(--azul); color: white; border: none; padding: 6px 10px; border-radius: 5px; font-size: 0.75em; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: bold; margin-top: 5px; }
+        .hidden { display: none; }
+        .btn-edit { color: var(--azul); border: none; background: none; font-size: 1.2em; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -35,7 +34,7 @@
 
     <div class="resumen-global">
         <div class="caja-item">
-            <span>Ventas Totales</span><b id="total-ventas" style="color:var(--verde)">$0</b>
+            <span>Ventas Totales</span><b id="total-ventas" style="color:var(--verde); display:block; font-size:1.2em;">$0</b>
             <div class="sub-resumen-grid">
                 <div>💵 Efec.<br><span id="v-efectivo">$0</span></div>
                 <div>💳 Trans.<br><span id="v-trans">$0</span></div>
@@ -43,8 +42,8 @@
             </div>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <div class="caja-item"><span>Gastos</span><b id="total-gastos" style="color:var(--rojo)">$0</b></div>
-            <div class="caja-item"><span>Utilidad</span><b id="total-utilidad" style="color:var(--rosa)">$0</b></div>
+            <div class="caja-item"><span>Gastos</span><b id="total-gastos" style="color:var(--rojo); display:block;">$0</b></div>
+            <div class="caja-item"><span>Utilidad</span><b id="total-utilidad" style="color:var(--rosa); display:block;">$0</b></div>
         </div>
     </div>
 
@@ -57,7 +56,7 @@
 
     <div id="sec-pedidos" class="seccion-contenido active">
         <div class="card" id="formulario-pedido">
-            <h4 id="form-titulo">Nuevo Pedido</h4>
+            <h4 id="form-titulo" style="margin:0 0 10px 0">Nuevo Pedido</h4>
             <input type="hidden" id="edit-id">
             <input type="text" id="p-cliente" placeholder="Nombre del cliente">
             <input type="tel" id="p-tel" placeholder="WhatsApp (10 dígitos)">
@@ -78,21 +77,20 @@
                 <input type="number" id="p-pagado" placeholder="Abonó $">
             </div>
 
-            <label>Método de Pago:</label>
             <select id="p-metodo">
                 <option value="Efectivo">💵 Efectivo</option>
                 <option value="Transferencia">💳 Transferencia</option>
                 <option value="Tarjeta">💳 Tarjeta</option>
             </select>
 
-            <div style="font-size: 0.8em; color: var(--rosa); margin-bottom: 10px;">Total Sugerido: <b id="total-sugerido">$0</b></div>
+            <div style="font-size: 0.85em; color: var(--rosa); margin-bottom: 10px;">Total Sugerido: <b id="total-sugerido">$0</b></div>
             <div style="display:flex; gap:5px;">
                 <input type="date" id="p-fecha">
                 <input type="time" id="p-hora">
             </div>
             <textarea id="p-notas" placeholder="Dedicatoria o notas..."></textarea>
             <button class="btn-principal" id="btn-guardar" onclick="agregarPedido()">Agendar Pedido</button>
-            <button class="btn-principal hidden" id="btn-cancelar" onclick="cancelarEdicion()" style="background:var(--gris)">Cancelar</button>
+            <button class="btn-principal hidden" id="btn-cancelar" onclick="cancelarEdicion()" style="background:var(--gris); margin-top:5px;">Cancelar</button>
         </div>
         <div id="lista-pedidos"></div>
     </div>
@@ -118,14 +116,13 @@
         <div id="lista-gastos"></div>
     </div>
 
-    <div id="sec-clientes" class="seccion-contenido">
-        <div id="lista-clientes"></div>
-    </div>
+    <div id="sec-clientes" class="seccion-contenido"><div id="lista-clientes"></div></div>
 
     <div id="sec-reportes" class="seccion-contenido">
         <div class="card"><h4>Balance de Pagos</h4><div style="height:200px;"><canvas id="graficaBarras"></canvas></div></div>
         <div class="card" style="border-top-color: var(--verde)">
             <button class="btn-principal" style="background: var(--verde)" onclick="enviarAlCorreo()">📧 Respaldo Correo</button>
+            <label style="display:block; margin-top:10px; font-size:0.8em;">Importar copia (.json):</label>
             <input type="file" id="importarArchivo" accept=".json" onchange="importarJSON(event)">
         </div>
     </div>
@@ -184,10 +181,10 @@
             document.getElementById('p-cliente').value = p.cliente;
             document.getElementById('p-tel').value = p.tel;
             document.getElementById('p-arreglo').value = p.arreglo;
-            document.getElementById('p-entrega').value = p.tipoEntrega;
+            document.getElementById('p-entrega').value = p.tipoEntrega || (p.direccion ? 'Envio' : 'Local');
             document.getElementById('p-direccion').value = p.direccion || '';
             document.getElementById('p-costo-envio').value = p.costoEnvio || 0;
-            document.getElementById('p-costo').value = p.costoArreglo || 0;
+            document.getElementById('p-costo').value = p.costoArreglo || p.costo || 0;
             document.getElementById('p-pagado').value = p.pagado || 0;
             document.getElementById('p-metodo').value = p.metodoPago || 'Efectivo';
             document.getElementById('p-fecha').value = p.fecha;
@@ -230,23 +227,31 @@
             let vT = 0, vE = 0, vTr = 0, vTa = 0, gT = 0;
             
             pedidos.sort((a,b) => b.id - a.id).forEach(p => { 
-                const total = p.costoTotal || (p.costoArreglo + (p.costoEnvio || 0)) || 0;
-                const montoActual = p.estado === 'Entregado' ? total : (p.pagado || 0);
+                // CORRECCIÓN PARA PEDIDOS VIEJOS: Intentar leer costoTotal, si no, sumar arreglo+envio, si no usar costo plano
+                const total = p.costoTotal || ((parseFloat(p.costoArreglo)||0) + (parseFloat(p.costoEnvio)||0)) || parseFloat(p.costo) || 0;
+                const montoActual = p.estado === 'Entregado' ? total : (parseFloat(p.pagado) || 0);
                 vT += montoActual;
                 if(p.metodoPago === 'Transferencia') vTr += montoActual; else if(p.metodoPago === 'Tarjeta') vTa += montoActual; else vE += montoActual;
+                
                 const colEstado = p.estado === 'Entregado' ? 'var(--verde)' : (p.estado === 'En proceso' ? 'var(--naranja)' : 'var(--gris)');
+                const colMetodo = p.metodoPago === 'Transferencia' ? 'var(--azul)' : (p.metodoPago === 'Tarjeta' ? 'var(--morado)' : 'var(--verde)');
+
                 lp.innerHTML += `<div class="item-lista" style="border-left-color:${colEstado}">
                     <div class="info-row"><span><b>${p.cliente}</b><br><small>${p.fecha} | ${p.hora}</small></span>
-                    <div><button class="btn-edit" onclick="editarPedido(${p.id})">✏️</button><button onclick="borrarItem(${p.id}, 'pedido')" style="color:red; border:none; background:none;">✕</button></div></div>
-                    <div class="detalles-pedido"><b>Ramo:</b> ${p.arreglo || 'S/D'}<br><b>Abonó:</b> $${p.pagado || 0} (${p.metodoPago || 'Efectivo'})</div>
+                    <div><button class="btn-edit" onclick="editarPedido(${p.id})">✏️</button><button onclick="borrarItem(${p.id}, 'pedido')" style="color:red; border:none; background:none; margin-left:10px;">✕</button></div></div>
+                    <div class="detalles-pedido">
+                        <b>Ramo:</b> ${p.arreglo || 'S/D'}<br>
+                        <b>Total:</b> $${total} | <b>Abonó:</b> $${p.pagado || 0} <span style="color:${colMetodo}; font-weight:bold">(${p.metodoPago || 'Efectivo'})</span>
+                        ${p.direccion ? `<br><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.direccion)}" target="_blank" class="btn-maps">📍 Google Maps</a>` : ''}
+                    </div>
                     <div class="info-row" style="margin-top:10px">
                         <select class="status-select" onchange="cambiarEstado(${p.id}, this.value)"><option value="En espera" ${p.estado === 'En espera' ? 'selected' : ''}>⏳ Espera</option><option value="Entregado" ${p.estado === 'Entregado' ? 'selected' : ''}>✅ Entregado</option></select>
-                        <b style="color:var(--verde)">$${montoActual}</b>
+                        <b style="color:var(--verde); font-size:1.1em;">$${montoActual}</b>
                     </div></div>`; 
             });
             
             gastos.forEach(ga => { gT += ga.monto; lg.innerHTML += `<div class="item-lista" style="border-left:6px solid var(--rojo); padding:10px; display:flex; justify-content:space-between"><span>${ga.concepto} <small>(${ga.categoria})</small></span><span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="color:red; border:none; background:none;">✕</button></span></div>`; });
-            clientes.forEach(c => { lc.innerHTML += `<div class="item-lista" style="border-left:6px solid var(--azul); padding:10px; display:flex; justify-content:space-between"><span><b>${c.nombre}</b></span><span><button onclick="borrarItem('${c.tel}', 'cliente')" style="color:var(--rojo); border:none; background:none;">🗑️</button></span></div>`; });
+            clientes.forEach(c => { lc.innerHTML += `<div class="item-lista" style="border-left:6px solid var(--azul); padding:10px; display:flex; justify-content:space-between"><span><b>${c.nombre}</b><br><small>${c.tel}</small></span><span><a href="https://wa.me/52${c.tel}" style="text-decoration:none">💬</a> <button onclick="borrarItem('${c.tel}', 'cliente')" style="color:var(--rojo); border:none; background:none;">🗑️</button></span></div>`; });
             
             document.getElementById('total-ventas').innerText = '$' + vT.toFixed(2);
             document.getElementById('v-efectivo').innerText = '$' + vE.toFixed(2);
