@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>De flor en flor - Versión 34</title>
+    <title>De flor en flor - Versión 35</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
@@ -14,8 +14,12 @@
         .tab.active { background: var(--rosa); color: white; box-shadow: 0 4px 10px rgba(216, 27, 96, 0.3); }
         .seccion-contenido { display: none; }
         .seccion-contenido.active { display: block; }
-        .resumen-global { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 20px; }
+        
+        /* Ajuste de Resumen Global para 4 elementos */
+        .resumen-global { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
         .caja-item { background: white; padding: 10px; border-radius: 10px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .caja-item.full { grid-column: span 2; }
+        
         .sub-resumen-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; font-size: 0.65em; color: #666; margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; border-top: 4px solid var(--rosa); }
         input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
@@ -32,18 +36,28 @@
 
     <h2 style="text-align:center; color:var(--rosa); margin: 10px 0;">🌸 De flor en flor</h2>
 
+    <!-- RESUMEN ACTUALIZADO V35 -->
     <div class="resumen-global">
-        <div class="caja-item">
-            <span>Ventas Totales</span><b id="total-ventas" style="color:var(--verde); display:block; font-size:1.2em;">$0</b>
+        <div class="caja-item full">
+            <span>Ventas Totales (Bruto)</span><b id="total-ventas" style="color:var(--azul); display:block; font-size:1.2em;">$0</b>
             <div class="sub-resumen-grid">
                 <div>💵 Efec.<br><span id="v-efectivo">$0</span></div>
                 <div>💳 Trans.<br><span id="v-trans">$0</span></div>
                 <div>💳 Tarj.<br><span id="v-tarjeta">$0</span></div>
             </div>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <div class="caja-item"><span>Gastos</span><b id="total-gastos" style="color:var(--rojo); display:block;">$0</b></div>
-            <div class="caja-item"><span>Utilidad</span><b id="total-utilidad" style="color:var(--rosa); display:block;">$0</b></div>
+        <div class="caja-item" style="border-bottom: 3px solid var(--naranja)">
+            <span style="font-size: 0.8em;">🚚 Total Envíos</span>
+            <b id="total-envios" style="color:var(--naranja); display:block;">$0</b>
+        </div>
+        <div class="caja-item" style="border-bottom: 3px solid var(--rojo)">
+            <span style="font-size: 0.8em;">📉 Gastos</span>
+            <b id="total-gastos" style="color:var(--rojo); display:block;">$0</b>
+        </div>
+        <div class="caja-item full" style="background: #f0fdf4; border: 1px solid var(--verde);">
+            <span>💰 Utilidad Real (Neta)</span>
+            <b id="total-utilidad" style="color:var(--verde); display:block; font-size: 1.3em;">$0</b>
+            <small style="font-size: 0.6em; color: #666;">(Ventas - Envíos - Gastos)</small>
         </div>
     </div>
 
@@ -54,6 +68,7 @@
         <button class="tab" onclick="mostrarPestaña('reportes', this)">Análisis</button>
     </div>
 
+    <!-- SECCIÓN PEDIDOS -->
     <div id="sec-pedidos" class="seccion-contenido active">
         <div class="card" id="formulario-pedido">
             <h4 id="form-titulo" style="margin:0 0 10px 0">Nuevo Pedido</h4>
@@ -83,7 +98,7 @@
                 <option value="Tarjeta">💳 Tarjeta</option>
             </select>
 
-            <div style="font-size: 0.85em; color: var(--rosa); margin-bottom: 10px;">Total Sugerido: <b id="total-sugerido">$0</b></div>
+            <div style="font-size: 0.85em; color: var(--rosa); margin-bottom: 10px;">Total Sugerido (Arreglo + Envío): <b id="total-sugerido">$0</b></div>
             <div style="display:flex; gap:5px;">
                 <input type="date" id="p-fecha">
                 <input type="time" id="p-hora">
@@ -95,6 +110,7 @@
         <div id="lista-pedidos"></div>
     </div>
 
+    <!-- SECCIÓN GASTOS -->
     <div id="sec-gastos" class="seccion-contenido">
         <div class="card">
             <h4>Registrar Gasto</h4>
@@ -224,13 +240,16 @@
         function renderizar() {
             const lp = document.getElementById('lista-pedidos'), lg = document.getElementById('lista-gastos'), lc = document.getElementById('lista-clientes');
             lp.innerHTML = ''; lg.innerHTML = ''; lc.innerHTML = '';
-            let vT = 0, vE = 0, vTr = 0, vTa = 0, gT = 0;
+            let vT = 0, vE = 0, vTr = 0, vTa = 0, gT = 0, vEn = 0;
             
             pedidos.sort((a,b) => b.id - a.id).forEach(p => { 
-                // CORRECCIÓN PARA PEDIDOS VIEJOS: Intentar leer costoTotal, si no, sumar arreglo+envio, si no usar costo plano
-                const total = p.costoTotal || ((parseFloat(p.costoArreglo)||0) + (parseFloat(p.costoEnvio)||0)) || parseFloat(p.costo) || 0;
+                const envioActual = parseFloat(p.costoEnvio) || 0;
+                const total = p.costoTotal || ((parseFloat(p.costoArreglo)||0) + envioActual) || parseFloat(p.costo) || 0;
                 const montoActual = p.estado === 'Entregado' ? total : (parseFloat(p.pagado) || 0);
+                
                 vT += montoActual;
+                vEn += envioActual; // ACUMULAR ENVÍOS
+
                 if(p.metodoPago === 'Transferencia') vTr += montoActual; else if(p.metodoPago === 'Tarjeta') vTa += montoActual; else vE += montoActual;
                 
                 const colEstado = p.estado === 'Entregado' ? 'var(--verde)' : (p.estado === 'En proceso' ? 'var(--naranja)' : 'var(--gris)');
@@ -241,7 +260,8 @@
                     <div><button class="btn-edit" onclick="editarPedido(${p.id})">✏️</button><button onclick="borrarItem(${p.id}, 'pedido')" style="color:red; border:none; background:none; margin-left:10px;">✕</button></div></div>
                     <div class="detalles-pedido">
                         <b>Ramo:</b> ${p.arreglo || 'S/D'}<br>
-                        <b>Total:</b> $${total} | <b>Abonó:</b> $${p.pagado || 0} <span style="color:${colMetodo}; font-weight:bold">(${p.metodoPago || 'Efectivo'})</span>
+                        <b>Arreglo:</b> $${p.costoArreglo || 0} | <span style="color:var(--naranja); font-weight:bold">🚚 Envío: $${envioActual}</span><br>
+                        <b>Total Pedido:</b> $${total} | <b>Abonó:</b> $${p.pagado || 0} <span style="color:${colMetodo}; font-weight:bold">(${p.metodoPago || 'Efectivo'})</span>
                         ${p.direccion ? `<br><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.direccion)}" target="_blank" class="btn-maps">📍 Google Maps</a>` : ''}
                     </div>
                     <div class="info-row" style="margin-top:10px">
@@ -253,12 +273,18 @@
             gastos.forEach(ga => { gT += ga.monto; lg.innerHTML += `<div class="item-lista" style="border-left:6px solid var(--rojo); padding:10px; display:flex; justify-content:space-between"><span>${ga.concepto} <small>(${ga.categoria})</small></span><span>$${ga.monto} <button onclick="borrarItem(${ga.id}, 'gasto')" style="color:red; border:none; background:none;">✕</button></span></div>`; });
             clientes.forEach(c => { lc.innerHTML += `<div class="item-lista" style="border-left:6px solid var(--azul); padding:10px; display:flex; justify-content:space-between"><span><b>${c.nombre}</b><br><small>${c.tel}</small></span><span><a href="https://wa.me/52${c.tel}" style="text-decoration:none">💬</a> <button onclick="borrarItem('${c.tel}', 'cliente')" style="color:var(--rojo); border:none; background:none;">🗑️</button></span></div>`; });
             
+            // ACTUALIZACIÓN DE INTERFAZ
             document.getElementById('total-ventas').innerText = '$' + vT.toFixed(2);
             document.getElementById('v-efectivo').innerText = '$' + vE.toFixed(2);
             document.getElementById('v-trans').innerText = '$' + vTr.toFixed(2);
             document.getElementById('v-tarjeta').innerText = '$' + vTa.toFixed(2);
+            
+            document.getElementById('total-envios').innerText = '$' + vEn.toFixed(2);
             document.getElementById('total-gastos').innerText = '$' + gT.toFixed(2);
-            document.getElementById('total-utilidad').innerText = '$' + (vT - gT).toFixed(2);
+            
+            // UTILIDAD REAL: Ventas Brutas - Envíos (que pagas) - Gastos Operativos
+            const utilidadReal = vT - vEn - gT;
+            document.getElementById('total-utilidad').innerText = '$' + utilidadReal.toFixed(2);
         }
 
         function generarReportes() {
