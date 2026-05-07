@@ -14,30 +14,36 @@
            DESIGN TOKENS
         =========================== */
         :root {
-            --plum:          #3D0C35;
-            --plum-mid:      #5A1550;
-            --rosa:          #C2185B;
-            --rosa-hover:    #A31545;
-            --rosa-light:    #F48FB1;
-            --rosa-pale:     #FCE4EC;
-            --bg:            #FDF6FB;
-            --bg-alt:        #F7EEF5;
+            /* Sidebar usa morado profundo como base */
+            --plum:          #3B1F6E;
+            --plum-mid:      #5533A0;
+            /* Rosa — color principal de la marca */
+            --rosa:          #E91E8C;
+            --rosa-hover:    #C2185B;
+            --rosa-light:    #F8A8D4;
+            --rosa-pale:     #FDE8F4;
+            /* Verde — utilidad / positivo */
+            --verde:         #2E8B57;
+            --verde-light:   #E3F7EC;
+            /* Morado — acento secundario */
+            --morado:        #7C3AED;
+            --morado-light:  #EDE9FE;
+            /* Fondo general suave */
+            --bg:            #FAF5FF;
+            --bg-alt:        #F3EEF9;
             --card:          #FFFFFF;
-            --verde:         #2E7D5E;
-            --verde-light:   #E8F5EE;
+            /* Otros estados */
             --rojo:          #C0392B;
             --rojo-light:    #FDEDEC;
             --naranja:       #E67E22;
             --naranja-light: #FEF0E0;
             --azul:          #1565C0;
             --azul-light:    #E3F2FD;
-            --morado:        #6A1B9A;
-            --morado-light:  #F3E5F5;
-            --text:          #1C1C2E;
-            --text-soft:     #6B6B80;
-            --border:        #EDE0EE;
-            --shadow-sm:     0 1px 4px rgba(61,12,53,0.07);
-            --shadow-md:     0 4px 16px rgba(61,12,53,0.11);
+            --text:          #1A1030;
+            --text-soft:     #6B638A;
+            --border:        #E5D9F5;
+            --shadow-sm:     0 1px 4px rgba(59,31,110,0.08);
+            --shadow-md:     0 4px 16px rgba(59,31,110,0.13);
             --radius:        14px;
             --radius-sm:     9px;
             --sidebar-w:     256px;
@@ -244,10 +250,10 @@
             top: 0; left: 0; right: 0;
             height: 3px;
         }
-        .kpi-card.kpi-ventas::after  { background: linear-gradient(90deg, var(--azul),    #7E57C2); }
-        .kpi-card.kpi-envios::after  { background: linear-gradient(90deg, var(--naranja),  #F4D03F); }
-        .kpi-card.kpi-gastos::after  { background: linear-gradient(90deg, var(--rojo),     var(--naranja)); }
-        .kpi-card.kpi-utilidad::after{ background: linear-gradient(90deg, var(--verde),    #52BE80); }
+        .kpi-card.kpi-ventas::after  { background: linear-gradient(90deg, var(--rosa),    var(--morado)); }
+        .kpi-card.kpi-envios::after  { background: linear-gradient(90deg, var(--naranja), #F4D03F); }
+        .kpi-card.kpi-gastos::after  { background: linear-gradient(90deg, var(--rojo),    var(--naranja)); }
+        .kpi-card.kpi-utilidad::after{ background: linear-gradient(90deg, var(--verde),   #52BE80); }
 
         .kpi-label {
             font-size: 0.72em;
@@ -266,7 +272,7 @@
             margin-bottom: 4px;
         }
 
-        .kpi-card.kpi-ventas  .kpi-value { color: var(--azul);    }
+        .kpi-card.kpi-ventas  .kpi-value { color: var(--rosa);    }
         .kpi-card.kpi-envios  .kpi-value { color: var(--naranja); }
         .kpi-card.kpi-gastos  .kpi-value { color: var(--rojo);    }
         .kpi-card.kpi-utilidad .kpi-value { color: var(--verde);  }
@@ -320,14 +326,14 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--rosa), var(--plum-mid));
+            background: linear-gradient(90deg, var(--rosa), var(--morado));
         }
 
         .card.card-gastos::after   { background: linear-gradient(90deg, var(--rojo), var(--naranja)); }
-        .card.card-reportes::after { background: linear-gradient(90deg, var(--morado), #AB47BC); }
+        .card.card-reportes::after { background: linear-gradient(90deg, var(--morado), var(--rosa)); }
         .card.card-backup::after   { background: linear-gradient(90deg, var(--verde), #52BE80); }
-        .card.card-neutral::after  { background: linear-gradient(90deg, #BDBDBD, #E0E0E0); }
-        .card.card-filters::after  { background: linear-gradient(90deg, var(--azul), var(--morado)); }
+        .card.card-neutral::after  { background: linear-gradient(90deg, var(--rosa), var(--morado)); }
+        .card.card-filters::after  { background: linear-gradient(90deg, var(--morado), var(--rosa)); }
 
         .card-title {
             font-family: 'Playfair Display', serif;
@@ -650,7 +656,7 @@
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--rosa), var(--plum-mid));
+            background: linear-gradient(135deg, var(--rosa), var(--morado));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1108,7 +1114,7 @@
                 <div id="rep-resumen" class="rep-grid" style="display:none;">
                     <div class="rep-caja full">
                         <span class="rep-label">Ventas del período</span>
-                        <span class="rep-value" id="rep-ventas" style="color:var(--azul)">$0</span>
+                        <span class="rep-value" id="rep-ventas" style="color:var(--rosa)">$0</span>
                     </div>
                     <div class="rep-caja">
                         <span class="rep-label">🚚 Envíos</span>
@@ -1469,7 +1475,7 @@
             ? `Mostrando ${filtrados.length} de ${pedidos.length} pedidos`
             : `${pedidos.length} pedido${pedidos.length !== 1 ? 's' : ''}`;
 
-        const colMetodo = m => m === 'Transferencia' ? 'var(--azul)' : (m === 'Tarjeta' ? 'var(--morado)' : 'var(--verde)');
+        const colMetodo = m => m === 'Transferencia' ? 'var(--morado)' : (m === 'Tarjeta' ? 'var(--rosa)' : 'var(--verde)');
 
         lp.innerHTML = '';
         filtrados.sort((a, b) => b.id - a.id).forEach(p => {
@@ -1551,7 +1557,7 @@
                 datasets: [{
                     label: hayPeriodo ? 'Ventas del período $' : 'Ventas totales $',
                     data: [tot.vE, tot.vTr, tot.vTa],
-                    backgroundColor: ['#2E7D5E', '#1565C0', '#6A1B9A'],
+                    backgroundColor: ['#E91E8C', '#7C3AED', '#2E8B57'],
                     borderRadius: 7,
                     borderSkipped: false,
                 }]
