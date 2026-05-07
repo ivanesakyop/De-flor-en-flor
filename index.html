@@ -1367,7 +1367,11 @@
             : `<div class="alert alert-ok">✅ Todos los pedidos están entregados</div>`;
 
         const recientes = document.getElementById('dashboard-recientes');
-        const ultimos = [...pedidos].sort((a, b) => b.id - a.id).slice(0, 5);
+        const ultimos = [...pedidos].sort((a, b) => {
+            if (b.fecha !== a.fecha) return b.fecha.localeCompare(a.fecha);
+            if ((b.hora || '') !== (a.hora || '')) return (b.hora || '').localeCompare(a.hora || '');
+            return b.id - a.id;
+        }).slice(0, 5);
 
         if (ultimos.length === 0) {
             recientes.innerHTML = `<p style="color:var(--text-soft);font-size:0.9em;text-align:center;padding:24px 0;">Aún no hay pedidos registrados</p>`;
@@ -1478,7 +1482,11 @@
         const colMetodo = m => m === 'Transferencia' ? 'var(--morado)' : (m === 'Tarjeta' ? 'var(--rosa)' : 'var(--verde)');
 
         lp.innerHTML = '';
-        filtrados.sort((a, b) => b.id - a.id).forEach(p => {
+        filtrados.sort((a, b) => {
+            if (b.fecha !== a.fecha) return b.fecha.localeCompare(a.fecha);
+            if ((b.hora || '') !== (a.hora || '')) return (b.hora || '').localeCompare(a.hora || '');
+            return b.id - a.id;
+        }).forEach(p => {
             const envio = parseFloat(p.costoEnvio) || 0;
             const total = p.costoTotal || ((parseFloat(p.costoArreglo)||0)+envio) || parseFloat(p.costo) || 0;
             const p1 = parseFloat(p.pagado)  || 0;
