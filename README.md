@@ -1,6 +1,15 @@
 # 🌸 De flor en flor
 
-Aplicación web para la gestión de una florería: agenda de pedidos, control de gastos e ingresos, directorio de clientes y análisis financiero.
+Aplicación web **mobile-first** para la gestión de una florería: agenda de pedidos, control de gastos e ingresos, directorio de clientes y análisis financiero.
+
+## Diseño
+
+Interfaz con estética floral acuarela, pensada para usarse desde el celular:
+
+- Paleta cálida (rosa empolvado, salvia y terracota) sobre fondos crema
+- Tipografías [Cormorant Garamond](https://fonts.google.com/specimen/Cormorant+Garamond) (titulares) y [Nunito](https://fonts.google.com/specimen/Nunito) (cuerpo)
+- Diseño tipo teléfono centrado, con tarjetas suaves redondeadas
+- Barra superior de marca, barra de navegación inferior siempre visible y botón flotante (FAB) para crear un pedido rápido
 
 ## Características
 
@@ -37,7 +46,8 @@ Aplicación web para la gestión de una florería: agenda de pedidos, control de
 
 ## Tecnologías
 
-- HTML5 / CSS3 / JavaScript (vanilla) — sin frameworks
+- HTML5 / CSS3 / JavaScript (vanilla) — sin frameworks, en un único archivo `index.html`
+- Diseño responsivo mobile-first
 - [Chart.js](https://www.chartjs.org/) — gráficas
 - [EmailJS](https://www.emailjs.com/) — envío de respaldo por correo
 - `localStorage` — persistencia de datos en el navegador
