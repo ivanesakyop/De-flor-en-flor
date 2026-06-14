@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         /* ===========================
@@ -1118,6 +1119,8 @@
                     <input type="date" id="rep-hasta">
                 </div>
                 <button class="btn btn-reportes" onclick="generarReportes()">Ver período</button>
+                <button class="btn btn-success" style="margin-top:8px;" onclick="exportarExcel()">📊 Exportar a Excel</button>
+                <p style="font-size:0.78em; color:var(--text-soft); margin-top:8px; text-align:center;">Genera un archivo .xlsx con hojas de Resumen, Pedidos y Gastos del período de arriba. Borra las fechas para exportar todo el histórico.</p>
 
                 <div id="rep-resumen" class="rep-grid" style="display:none;">
                     <div class="rep-caja full">
@@ -1652,6 +1655,107 @@
                 }
             }
         });
+    }
+
+    /* ---- Exportar a Excel (.xlsx) ---- */
+    function exportarExcel() {
+        if (typeof XLSX === 'undefined') {
+            return alert("No se pudo cargar el generador de Excel. Revisa tu conexión a internet e inténtalo de nuevo.");
+        }
+
+        const desde = document.getElementById('rep-desde')?.value || '';
+        const hasta = document.getElementById('rep-hasta')?.value || '';
+        const pedFiltrados = pedidos.filter(p => (!desde || p.fecha >= desde) && (!hasta || p.fecha <= hasta));
+        const gasFiltrados = gastos.filter(g  => (!desde || g.fecha >= desde) && (!hasta || g.fecha <= hasta));
+
+        if (pedFiltrados.length === 0 && gasFiltrados.length === 0) {
+            return alert("No hay datos en el período seleccionado para exportar.");
+        }
+
+        /* Hoja: Pedidos */
+        const pedidosOrden = [...pedFiltrados].sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.hora||'').localeCompare(b.hora||''));
+        const filasPedidos = pedidosOrden.map(p => {
+            const envio = parseFloat(p.costoEnvio) || 0;
+            const total = p.costoTotal || ((parseFloat(p.costoArreglo)||0) + envio) || parseFloat(p.costo) || 0;
+            const p1 = parseFloat(p.pagado)  || 0;
+            const p2 = parseFloat(p.pagado2) || 0;
+            const pagado = p1 + p2;
+            return {
+                'Fecha': p.fecha,
+                'Hora': p.hora || '',
+                'Cliente': (p.cliente || '').trim(),
+                'WhatsApp': p.tel || '',
+                'Arreglo': (p.arreglo || '').trim(),
+                'Entrega': p.tipoEntrega || (p.direccion ? 'Envio' : 'Local'),
+                'Dirección': p.direccion || '',
+                'Costo arreglo': parseFloat(p.costoArreglo) || 0,
+                'Costo envío': envio,
+                'Total': total,
+                'Pago 1': p1,
+                'Método 1': p1 ? (p.metodoPago || '') : '',
+                'Pago 2': p2,
+                'Método 2': p2 ? (p.metodoPago2 || '') : '',
+                'Pagado': pagado,
+                'Saldo': Math.max(total - pagado, 0),
+                'Estado': p.estado || '',
+                'Notas': (p.notas || '').replace(/\n/g, ' ')
+            };
+        });
+        const wsPedidos = XLSX.utils.json_to_sheet(filasPedidos);
+        wsPedidos['!cols'] = [
+            {wch:11},{wch:7},{wch:22},{wch:16},{wch:30},{wch:8},{wch:30},
+            {wch:12},{wch:11},{wch:10},{wch:9},{wch:13},{wch:9},{wch:13},{wch:10},{wch:9},{wch:11},{wch:30}
+        ];
+
+        /* Hoja: Gastos */
+        const gastosOrden = [...gasFiltrados].sort((a, b) => a.fecha.localeCompare(b.fecha));
+        const filasGastos = gastosOrden.map(g => ({
+            'Fecha': g.fecha,
+            'Concepto': (g.concepto || '').trim(),
+            'Categoría': g.categoria || '',
+            'Monto': parseFloat(g.monto) || 0
+        }));
+        const wsGastos = XLSX.utils.json_to_sheet(filasGastos);
+        wsGastos['!cols'] = [{wch:11},{wch:34},{wch:18},{wch:10}];
+
+        /* Hoja: Resumen */
+        const tot = calcularTotalesPedidos(pedFiltrados);
+        const gT = gasFiltrados.reduce((s, g) => s + (parseFloat(g.monto) || 0), 0);
+        const utilidad = tot.vT - tot.vEn - gT;
+
+        const porCategoria = {};
+        gasFiltrados.forEach(g => { porCategoria[g.categoria || 'Otros'] = (porCategoria[g.categoria || 'Otros'] || 0) + (parseFloat(g.monto) || 0); });
+
+        const periodoTxt = (desde || hasta) ? `${desde || '...'}  a  ${hasta || '...'}` : 'Todos los registros';
+        const resumen = [
+            ['De flor en flor — Resumen'],
+            ['Período', periodoTxt],
+            ['Pedidos', pedFiltrados.length],
+            [],
+            ['INGRESOS (recaudado)'],
+            ['Ventas totales', tot.vT],
+            ['Efectivo', tot.vE],
+            ['Transferencia', tot.vTr],
+            ['Tarjeta', tot.vTa],
+            ['Envíos cobrados', tot.vEn],
+            [],
+            ['GASTOS'],
+            ...Object.entries(porCategoria).sort((a,b) => b[1]-a[1]).map(([c, m]) => [c, m]),
+            ['Total gastos', gT],
+            [],
+            ['UTILIDAD NETA', utilidad]
+        ];
+        const wsResumen = XLSX.utils.aoa_to_sheet(resumen);
+        wsResumen['!cols'] = [{wch:24},{wch:18}];
+
+        /* Construir libro y descargar */
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+        XLSX.utils.book_append_sheet(wb, wsPedidos, 'Pedidos');
+        XLSX.utils.book_append_sheet(wb, wsGastos,  'Gastos');
+
+        const sufijo = (desde || hasta) ? `${desde || 'inicio'}_a_${hasta || 'hoy'}` : `completo_${new Date().toISOString().split('T')[0]}`;
+        XLSX.writeFile(wb, `De_flor_en_flor_${sufijo}.xlsx`);
     }
 
     /* ---- Email backup ---- */
