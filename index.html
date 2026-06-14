@@ -544,6 +544,21 @@
         .badge-entregado { background: var(--verde-light); color: var(--verde); border: 1px solid #A9DFBF; }
 
         /* ===========================
+           MES HEADER
+        =========================== */
+        .mes-header {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: var(--morado);
+            text-transform: capitalize;
+            padding: 10px 4px 6px;
+            margin-top: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+        .mes-header:first-child { margin-top: 0; }
+
+        /* ===========================
            ORDER ITEMS
         =========================== */
         .order-item {
@@ -1458,6 +1473,13 @@
         renderDashboard();
     }
 
+    /* ---- Formato de mes ---- */
+    function formatearMes(yyyyMM) {
+        const [anio, mes] = yyyyMM.split('-').map(Number);
+        const texto = new Date(anio, mes - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+        return texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+
     /* ---- Lista de pedidos ---- */
     function renderizarLista() {
         const lp     = document.getElementById('lista-pedidos');
@@ -1482,11 +1504,18 @@
         const colMetodo = m => m === 'Transferencia' ? 'var(--morado)' : (m === 'Tarjeta' ? 'var(--rosa)' : 'var(--verde)');
 
         lp.innerHTML = '';
+        let mesActual = null;
         filtrados.sort((a, b) => {
             if (b.fecha !== a.fecha) return b.fecha.localeCompare(a.fecha);
             if ((b.hora || '') !== (a.hora || '')) return (b.hora || '').localeCompare(a.hora || '');
             return b.id - a.id;
         }).forEach(p => {
+            const mesPedido = p.fecha.slice(0, 7);
+            if (mesPedido !== mesActual) {
+                mesActual = mesPedido;
+                lp.innerHTML += `<div class="mes-header">${formatearMes(mesPedido)}</div>`;
+            }
+
             const envio = parseFloat(p.costoEnvio) || 0;
             const total = p.costoTotal || ((parseFloat(p.costoArreglo)||0)+envio) || parseFloat(p.costo) || 0;
             const p1 = parseFloat(p.pagado)  || 0;
