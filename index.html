@@ -1055,9 +1055,12 @@
                     <option value="En espera">⏳ En espera</option>
                     <option value="Entregado">✅ Entregados</option>
                 </select>
+                <select id="filtro-mes" onchange="onFiltroMesChange()">
+                    <option value="">📅 Todos los meses</option>
+                </select>
                 <div class="form-row" style="margin-bottom:8px;">
-                    <input type="date" id="filtro-desde" oninput="renderizarLista()">
-                    <input type="date" id="filtro-hasta" oninput="renderizarLista()">
+                    <input type="date" id="filtro-desde" oninput="onFiltroFechaChange()">
+                    <input type="date" id="filtro-hasta" oninput="onFiltroFechaChange()">
                 </div>
                 <button class="btn-clear" onclick="limpiarFiltros()">✕ Limpiar filtros</button>
             </div>
@@ -1336,9 +1339,36 @@
     function limpiarFiltros() {
         document.getElementById('filtro-busqueda').value = '';
         document.getElementById('filtro-estado').value   = '';
+        document.getElementById('filtro-mes').value      = '';
         document.getElementById('filtro-desde').value    = '';
         document.getElementById('filtro-hasta').value    = '';
         renderizarLista();
+    }
+
+    function onFiltroMesChange() {
+        if (document.getElementById('filtro-mes').value) {
+            document.getElementById('filtro-desde').value = '';
+            document.getElementById('filtro-hasta').value = '';
+        }
+        renderizarLista();
+    }
+
+    function onFiltroFechaChange() {
+        const desde = document.getElementById('filtro-desde').value;
+        const hasta = document.getElementById('filtro-hasta').value;
+        if (desde || hasta) {
+            document.getElementById('filtro-mes').value = '';
+        }
+        renderizarLista();
+    }
+
+    function poblarFiltroMes() {
+        const sel = document.getElementById('filtro-mes');
+        const actual = sel.value;
+        const meses = [...new Set(pedidos.map(p => p.fecha.slice(0, 7)))].sort().reverse();
+        sel.innerHTML = '<option value="">📅 Todos los meses</option>' +
+            meses.map(m => `<option value="${m}">${formatearMes(m)}</option>`).join('');
+        if (meses.includes(actual)) sel.value = actual;
     }
 
     /* ---- Persistencia ---- */
@@ -1419,6 +1449,8 @@
         lc.innerHTML = '';
         let gT = 0;
 
+        poblarFiltroMes();
+
         const tot = calcularTotalesPedidos(pedidos);
 
         gastos.forEach(ga => {
@@ -1485,18 +1517,23 @@
         const lp     = document.getElementById('lista-pedidos');
         const busq   = (document.getElementById('filtro-busqueda')?.value || '').toLowerCase().trim();
         const fEstado = document.getElementById('filtro-estado')?.value || '';
+        const fMes    = document.getElementById('filtro-mes')?.value    || '';
         const fDesde  = document.getElementById('filtro-desde')?.value  || '';
         const fHasta  = document.getElementById('filtro-hasta')?.value  || '';
 
         const filtrados = pedidos.filter(p => {
             if (busq   && !p.cliente.toLowerCase().includes(busq) && !(p.tel||'').includes(busq)) return false;
             if (fEstado && p.estado !== fEstado) return false;
-            if (fDesde  && p.fecha < fDesde) return false;
-            if (fHasta  && p.fecha > fHasta) return false;
+            if (fMes) {
+                if (p.fecha.slice(0, 7) !== fMes) return false;
+            } else {
+                if (fDesde && p.fecha < fDesde) return false;
+                if (fHasta && p.fecha > fHasta) return false;
+            }
             return true;
         });
 
-        const hayFiltro = busq || fEstado || fDesde || fHasta;
+        const hayFiltro = busq || fEstado || fMes || fDesde || fHasta;
         document.getElementById('contador-pedidos').innerText = hayFiltro
             ? `Mostrando ${filtrados.length} de ${pedidos.length} pedidos`
             : `${pedidos.length} pedido${pedidos.length !== 1 ? 's' : ''}`;
